@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Simple Test</h1>
+    
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testUsers()">Test Users</button>
+    <button onclick="testTasks()">Test Tasks</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        function showResult(message, isSuccess = true) {
+            const div = document.getElementById('result');
+            div.innerHTML = `<div class="result ${isSuccess ? 'success' : 'error'}">${message}</div>`;
+        }
+        
+        async function testLogin() {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@company.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Login response:', data);
+                
+                if (response.ok) {
+                    showResult(`✅ Login successful! Token: ${data.token ? 'Yes' : 'No'}`);
+                } else {
+                    showResult(`❌ Login failed: ${data.message}`);
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function testUsers() {
+            try {
+                const response = await fetch('http://localhost:5000/api/users');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Users API works! Found ${data.data.length} users`);
+                } else {
+                    showResult(`❌ Users API failed: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function testTasks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Tasks API works! Found ${data.data.length} tasks`);
+                } else {
+                    showResult(`❌ Tasks API failed: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, false);
+            }
+        }
+    </script>
+</body>
+</html> 

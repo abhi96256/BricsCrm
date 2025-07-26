@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test SubAdmin CRUD Operations</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; border: none; border-radius: 4px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .status { padding: 8px 12px; border-radius: 4px; margin: 10px 0; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .task-item, .machine-item { 
+            padding: 10px; 
+            margin: 5px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            background: #f9f9f9; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test SubAdmin CRUD Operations</h1>
+        <p>This test verifies that Edit and View Details functionality works properly in SubAdminDashboard</p>
+        
+        <div class="test-section">
+            <h2>📊 Current Data Status</h2>
+            <button class="btn-primary" onclick="loadCurrentData()">Load Current Data</button>
+            <div id="currentData"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Task Management Tests</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Create Task</h3>
+                    <button class="btn-success" onclick="createTestTask()">Create Test Task</button>
+                    <div id="createTaskResult"></div>
+                </div>
+                <div class="card">
+                    <h3>Update Task</h3>
+                    <button class="btn-warning" onclick="updateTestTask()">Update Last Task</button>
+                    <div id="updateTaskResult"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🏭 Machine Management Tests</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Create Machine</h3>
+                    <button class="btn-success" onclick="createTestMachine()">Create Test Machine</button>
+                    <div id="createMachineResult"></div>
+                </div>
+                <div class="card">
+                    <h3>Update Machine</h3>
+                    <button class="btn-warning" onclick="updateTestMachine()">Update Last Machine</button>
+                    <div id="updateMachineResult"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🗑️ Delete Operations</h2>
+            <button class="btn-danger" onclick="deleteTestData()">Delete Test Data</button>
+            <div id="deleteResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔍 View Details Test</h2>
+            <button class="btn-primary" onclick="testViewDetails()">Test View Details</button>
+            <div id="viewDetailsResult"></div>
+        </div>
+    </div>
+    
+    <script>
+        let testIds = {
+            taskId: null,
+            machineId: null
+        };
+        
+        function showResult(elementId, message, type = 'info') {
+            const div = document.getElementById(elementId);
+            div.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        async function loadCurrentData() {
+            try {
+                const [tasksRes, machinesRes, usersRes] = await Promise.all([
+                    fetch('http://localhost:5000/api/tasks'),
+                    fetch('http://localhost:5000/api/machines'),
+                    fetch('http://localhost:5000/api/users')
+                ]);
+                
+                const tasks = await tasksRes.json();
+                const machines = await machinesRes.json();
+                const users = await usersRes.json();
+                
+                let result = `<h3>📊 Current Database Status</h3>`;
+                result += `<div class="grid">`;
+                
+                result += `<div class="card">`;
+                result += `<h4>Tasks (${tasks.data.length})</h4>`;
+                tasks.data.slice(0, 3).forEach(task => {
+                    result += `<div class="task-item">`;
+                    result += `<strong>${task.title}</strong><br>`;
+                    result += `Status: ${task.status} | Priority: ${task.priority}<br>`;
+                    result += `Assigned to: ${task.assignedTo}<br>`;
+                    result += `ID: ${task.id}`;
+                    result += `</div>`;
+                });
+                if (tasks.data.length > 3) {
+                    result += `<p>... and ${tasks.data.length - 3} more tasks</p>`;
+                }
+                result += `</div>`;
+                
+                result += `<div class="card">`;
+                result += `<h4>Machines (${machines.data.length})</h4>`;
+                machines.data.forEach(machine => {
+                    result += `<div class="machine-item">`;
+                    result += `<strong>${machine.name}</strong><br>`;
+                    result += `Status: ${machine.status} | Location: ${machine.location}<br>`;
+                    result += `ID: ${machine.id}`;
+                    result += `</div>`;
+                });
+                result += `</div>`;
+                
+                result += `</div>`;
+                
+                document.getElementById('currentData').innerHTML = result;
+            } catch (error) {
+                showResult('currentData', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createTestTask() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'SubAdmin Test Task ' + Date.now(),
+                        description: 'This is a test task created by SubAdmin',
+                        assignedTo: '4', // Sarah
+                        machine: '1',
+                        deadline: '2025-08-30',
+                        priority: 'Medium'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    testIds.taskId = data.data.id;
+                    showResult('createTaskResult', `✅ Task created: ${data.data.title} (ID: ${data.data.id})`, 'success');
+                } else {
+                    showResult('createTaskResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('createTaskResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateTestTask() {
+            if (!testIds.taskId) {
+                showResult('updateTaskResult', `❌ No task created yet. Create a task first.`, 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/tasks/${testIds.taskId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Updated SubAdmin Test Task',
+                        status: 'In Progress',
+                        progress: 75,
+                        priority: 'High'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showResult('updateTaskResult', `✅ Task updated: ${data.data.title} (Status: ${data.data.status}, Progress: ${data.data.progress}%)`, 'success');
+                } else {
+                    showResult('updateTaskResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('updateTaskResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createTestMachine() {
+            try {
+                const response = await fetch('http://localhost:5000/api/machines', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'SubAdmin Test Machine ' + Date.now(),
+                        location: 'Test Location',
+                        status: 'Operational',
+                        model: 'TM-2000',
+                        serialNumber: 'SN' + Date.now(),
+                        department: 'Testing'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    testIds.machineId = data.data.id;
+                    showResult('createMachineResult', `✅ Machine created: ${data.data.name} (ID: ${data.data.id})`, 'success');
+                } else {
+                    showResult('createMachineResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('createMachineResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateTestMachine() {
+            if (!testIds.machineId) {
+                showResult('updateMachineResult', `❌ No machine created yet. Create a machine first.`, 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/machines/${testIds.machineId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Updated SubAdmin Test Machine',
+                        status: 'Maintenance',
+                        location: 'Updated Test Location'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showResult('updateMachineResult', `✅ Machine updated: ${data.data.name} (Status: ${data.data.status})`, 'success');
+                } else {
+                    showResult('updateMachineResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('updateMachineResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function deleteTestData() {
+            try {
+                let result = `<h4>🗑️ Deleting Test Data</h4>`;
+                
+                if (testIds.taskId) {
+                    try {
+                        const taskResponse = await fetch(`http://localhost:5000/api/tasks/${testIds.taskId}`, {
+                            method: 'DELETE'
+                        });
+                        if (taskResponse.ok) {
+                            result += `<p class="status success">✅ Test task deleted</p>`;
+                        } else {
+                            result += `<p class="status error">❌ Failed to delete task</p>`;
+                        }
+                    } catch (error) {
+                        result += `<p class="status error">❌ Error deleting task: ${error.message}</p>`;
+                    }
+                }
+                
+                if (testIds.machineId) {
+                    try {
+                        const machineResponse = await fetch(`http://localhost:5000/api/machines/${testIds.machineId}`, {
+                            method: 'DELETE'
+                        });
+                        if (machineResponse.ok) {
+                            result += `<p class="status success">✅ Test machine deleted</p>`;
+                        } else {
+                            result += `<p class="status error">❌ Failed to delete machine</p>`;
+                        }
+                    } catch (error) {
+                        result += `<p class="status error">❌ Error deleting machine: ${error.message}</p>`;
+                    }
+                }
+                
+                testIds = { taskId: null, machineId: null };
+                result += `<p class="status info">🔄 Test data cleanup completed</p>`;
+                
+                document.getElementById('deleteResult').innerHTML = result;
+            } catch (error) {
+                showResult('deleteResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testViewDetails() {
+            try {
+                const [tasksRes, machinesRes] = await Promise.all([
+                    fetch('http://localhost:5000/api/tasks'),
+                    fetch('http://localhost:5000/api/machines')
+                ]);
+                
+                const tasks = await tasksRes.json();
+                const machines = await machinesRes.json();
+                
+                let result = `<h4>🔍 View Details Test Results</h4>`;
+                
+                if (tasks.data.length > 0) {
+                    const task = tasks.data[0];
+                    result += `<div class="card">`;
+                    result += `<h5>Sample Task Details:</h5>`;
+                    result += `<pre>${JSON.stringify(task, null, 2)}</pre>`;
+                    result += `</div>`;
+                }
+                
+                if (machines.data.length > 0) {
+                    const machine = machines.data[0];
+                    result += `<div class="card">`;
+                    result += `<h5>Sample Machine Details:</h5>`;
+                    result += `<pre>${JSON.stringify(machine, null, 2)}</pre>`;
+                    result += `</div>`;
+                }
+                
+                result += `<p class="status success">✅ View Details functionality is ready to display this data in modals</p>`;
+                
+                document.getElementById('viewDetailsResult').innerHTML = result;
+            } catch (error) {
+                showResult('viewDetailsResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

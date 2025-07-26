@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
@@ -12,7 +12,16 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     confirmPassword: '',
     role: 'Employee'
   });
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    assignedTo: '',
+    machine: '',
+    deadline: '',
+    priority: 'Medium'
+  });
   const [formErrors, setFormErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   // Sample data
   const [users, setUsers] = useState([
@@ -54,6 +63,65 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     { id: 3, name: 'Machine C', status: 'Operational', location: 'Production Floor 1' }
   ]);
 
+  // API Base URL
+  const API_BASE_URL = 'http://localhost:5000/api';
+
+  // Fetch data from backend
+  useEffect(() => {
+    fetchUsers();
+    fetchTasks();
+    fetchMachines();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Admin sees all tasks
+        setTasks(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
+
+  const fetchMachines = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/machines`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMachines(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching machines:', error);
+    }
+  };
+
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
   };
@@ -69,6 +137,18 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         password: '',
         confirmPassword: '',
         role: 'Employee'
+      });
+      setFormErrors({});
+    }
+    // Reset form when opening add task modal
+    if (type === 'addTask') {
+      setNewTask({
+        title: '',
+        description: '',
+        assignedTo: '',
+        machine: '',
+        deadline: '',
+        priority: 'Medium'
       });
       setFormErrors({});
     }
@@ -110,6 +190,28 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     return errors;
   };
 
+  const validateTaskForm = () => {
+    const errors = {};
+    
+    if (!newTask.title.trim()) {
+      errors.title = 'Task title is required';
+    }
+    
+    if (!newTask.description.trim()) {
+      errors.description = 'Task description is required';
+    }
+    
+    if (!newTask.assignedTo) {
+      errors.assignedTo = 'Please assign to an employee';
+    }
+    
+    if (!newTask.deadline) {
+      errors.deadline = 'Deadline is required';
+    }
+    
+    return errors;
+  };
+
   const handleUserInputChange = (e) => {
     const { name, value } = e.target;
     setNewUser(prev => ({
@@ -126,7 +228,23 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     }
   };
 
-  const handleAddUser = () => {
+  const handleTaskInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewTask(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleAddUser = async () => {
     const errors = validateUserForm();
     
     if (Object.keys(errors).length > 0) {
@@ -134,28 +252,78 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       return;
     }
     
-    // Check if email already exists
-    const emailExists = users.some(user => user.email === newUser.email);
-    if (emailExists) {
-      setFormErrors({ email: 'Email already exists' });
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: newUser.name,
+          email: newUser.email,
+          password: newUser.password,
+          role: newUser.role
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(prev => [...prev, data.data]);
+        closeModal();
+        alert(`User ${newUser.name} created successfully as ${newUser.role}!`);
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Error creating user. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddTask = async () => {
+    const errors = validateTaskForm();
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
     
-    // Create new user
-    const newUserObj = {
-      id: users.length + 1,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      status: 'Active',
-      password: newUser.password // In real app, this would be hashed
-    };
-    
-    setUsers(prev => [...prev, newUserObj]);
-    closeModal();
-    
-    // Show success message (you can add a toast notification here)
-    alert(`User ${newUser.name} created successfully as ${newUser.role}!`);
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: newTask.title,
+          description: newTask.description,
+          assignedTo: newTask.assignedTo,
+          machine: newTask.machine,
+          deadline: newTask.deadline,
+          priority: newTask.priority
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTasks(prev => [...prev, data.data]);
+        closeModal();
+        alert(`Task "${newTask.title}" created successfully!`);
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+      alert('Error creating task. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteUser = (userId) => {
@@ -454,8 +622,8 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
             </div>
             <div className="task-details">
               <div className="task-info">
-                <span><strong>Assigned to:</strong> {task.assignedTo}</span>
-                <span><strong>Machine:</strong> {task.machine}</span>
+                <span><strong>Assigned to:</strong> {task.assignedTo ? (typeof task.assignedTo === 'string' ? task.assignedTo : task.assignedTo.name) : 'Not assigned'}</span>
+                <span><strong>Machine:</strong> {task.machine ? (typeof task.machine === 'string' ? task.machine : task.machine.name) : 'Not assigned'}</span>
                 <span><strong>Deadline:</strong> {task.deadline}</span>
               </div>
               <div className="task-employees">
@@ -584,36 +752,99 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                 {formErrors.role && <p className="error-message">{formErrors.role}</p>}
                 
                 <div className="modal-actions">
-                  <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
-                  <button className="action-btn primary" onClick={handleAddUser}>Create User</button>
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                    Cancel
+                  </button>
+                  <button 
+                    className="action-btn primary" 
+                    onClick={handleAddUser}
+                    disabled={loading}
+                  >
+                    {loading ? 'Creating...' : 'Create User'}
+                  </button>
                 </div>
               </div>
             )}
             {modalType === 'addTask' && (
               <div className="form-group">
                 <label>Task Title</label>
-                <input type="text" placeholder="Enter task title" />
-                <label>Assign to Manager</label>
-                <select>
-                  {users.filter(u => u.role === 'Manager').map(user => (
+                <input 
+                  type="text" 
+                  name="title"
+                  value={newTask.title}
+                  onChange={handleTaskInputChange}
+                  placeholder="Enter task title" 
+                />
+                {formErrors.title && <p className="error-message">{formErrors.title}</p>}
+                
+                <label>Task Description</label>
+                <textarea 
+                  name="description"
+                  value={newTask.description}
+                  onChange={handleTaskInputChange}
+                  placeholder="Enter task description"
+                  rows="3"
+                />
+                {formErrors.description && <p className="error-message">{formErrors.description}</p>}
+                
+                <label>Assign to Employee</label>
+                <select 
+                  name="assignedTo"
+                  value={newTask.assignedTo}
+                  onChange={handleTaskInputChange}
+                >
+                  <option value="">Select an employee</option>
+                  {users.filter(u => u.role === 'Employee').map(user => (
                     <option key={user.id} value={user.name}>{user.name}</option>
                   ))}
                 </select>
+                {formErrors.assignedTo && <p className="error-message">{formErrors.assignedTo}</p>}
+                
                 <label>Machine</label>
-                <select>
+                <select 
+                  name="machine"
+                  value={newTask.machine}
+                  onChange={handleTaskInputChange}
+                >
+                  <option value="">Select a machine (optional)</option>
                   {machines.map(machine => (
                     <option key={machine.id} value={machine.name}>{machine.name}</option>
                   ))}
                 </select>
+                
                 <label>Deadline</label>
-                <input type="date" />
+                <input 
+                  type="date" 
+                  name="deadline"
+                  value={newTask.deadline}
+                  onChange={handleTaskInputChange}
+                />
+                {formErrors.deadline && <p className="error-message">{formErrors.deadline}</p>}
+                
                 <label>Priority</label>
-                <select>
+                <select 
+                  name="priority"
+                  value={newTask.priority}
+                  onChange={handleTaskInputChange}
+                >
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
                   <option value="High">High</option>
+                  <option value="Urgent">Urgent</option>
                 </select>
-                <button className="action-btn primary">Create Task</button>
+                
+                <div className="modal-actions">
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                    Cancel
+                  </button>
+                  <button 
+                    className="action-btn primary" 
+                    onClick={handleAddTask}
+                    disabled={loading}
+                  >
+                    {loading ? 'Creating...' : 'Create Task'}
+                  </button>
+                </div>
               </div>
             )}
             {modalType === 'addMachine' && (

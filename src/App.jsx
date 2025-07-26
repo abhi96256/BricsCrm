@@ -134,7 +134,7 @@ function App() {
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '0.5rem',
-                color: '#ffffff',
+                color: 'black',
                 fontSize: '0.9rem'
               }}>
                 <span>{currentUser?.name}</span>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Token</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px; margin: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Authentication</h1>
+    
+    <div class="section">
+        <h3>1. Test Backend Health</h3>
+        <button onclick="testHealth()">Test Health Check</button>
+        <div id="health-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>2. Test Login</h3>
+        <button onclick="testLogin()">Login as Admin</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>3. Test Token</h3>
+        <button onclick="testToken()">Test Current Token</button>
+        <div id="token-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>4. Test API Call</h3>
+        <button onclick="testAPI()">Test Tasks API</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>5. Clear Token</h3>
+        <button onclick="clearToken()">Clear localStorage Token</button>
+        <div id="clear-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        async function testHealth() {
+            const result = document.getElementById('health-result');
+            result.innerHTML = '<span class="info">Testing...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<span class="success">✅ Backend is running</span><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Backend error</span><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Connection failed: ${error.message}</span>`;
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('login-result');
+            result.innerHTML = '<span class="info">Logging in...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@company.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    result.innerHTML = `
+                        <span class="success">✅ Login successful!</span>
+                        <p><strong>User:</strong> ${data.user.name} (${data.user.role})</p>
+                        <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Login failed: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Login error: ${error.message}</span>`;
+            }
+        }
+
+        async function testToken() {
+            const result = document.getElementById('token-result');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                result.innerHTML = '<span class="error">❌ No token found in localStorage</span>';
+                return;
+            }
+            
+            result.innerHTML = '<span class="info">Testing token...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ Token is valid!</span>
+                        <p><strong>User:</strong> ${data.data.name} (${data.data.role})</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Token invalid: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Token test error: ${error.message}</span>`;
+            }
+        }
+
+        async function testAPI() {
+            const result = document.getElementById('api-result');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                result.innerHTML = '<span class="error">❌ No token found. Please login first.</span>';
+                return;
+            }
+            
+            result.innerHTML = '<span class="info">Testing API...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ API call successful!</span>
+                        <p><strong>Tasks found:</strong> ${data.data.length}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ API call failed: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ API test error: ${error.message}</span>`;
+            }
+        }
+
+        function clearToken() {
+            localStorage.removeItem('token');
+            document.getElementById('clear-result').innerHTML = '<span class="success">✅ Token cleared from localStorage</span>';
+        }
+    </script>
+</body>
+</html> 

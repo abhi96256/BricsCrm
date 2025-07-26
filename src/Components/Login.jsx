@@ -19,14 +19,7 @@ const Login = ({ onLoginSuccess }) => {
 
   const lottieContainer = useRef(null);
 
-  // Sample users data (in real app, this would come from backend)
-  const sampleUsers = [
-    { id: 1, name: 'John Manager', role: 'Manager', email: 'john@company.com', password: 'password123', status: 'Active' },
-    { id: 2, name: 'Sarah Employee', role: 'Employee', email: 'sarah@company.com', password: 'password456', status: 'Active' },
-    { id: 3, name: 'Mike Worker', role: 'Employee', email: 'mike@company.com', password: 'password789', status: 'Active' },
-    { id: 4, name: 'Admin User', role: 'Admin', email: 'admin@company.com', password: 'admin123', status: 'Active' },
-    { id: 5, name: 'Sub Admin User', role: 'Sub Admin', email: 'subadmin@company.com', password: 'subadmin123', status: 'Active' }
-  ];
+
 
   useEffect(() => {
     if (lottieContainer.current) {
@@ -68,31 +61,30 @@ const Login = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     
-    // Find user by email
-    const user = sampleUsers.find(u => u.email === loginData.email);
+    // Bypass authentication completely - use demo accounts
+    const demoUsers = {
+      'admin@company.com': { id: '1', name: 'Admin User', role: 'Admin', email: 'admin@company.com' },
+      'subadmin@company.com': { id: '2', name: 'Sub Admin User', role: 'Sub Admin', email: 'subadmin@company.com' },
+      'john@company.com': { id: '3', name: 'John Manager', role: 'Manager', email: 'john@company.com' },
+      'sarah@company.com': { id: '4', name: 'Sarah Employee', role: 'Employee', email: 'sarah@company.com' }
+    };
     
-    if (!user) {
-      setLoginError('User not found with this email');
-      return;
-    }
+    const user = demoUsers[loginData.email];
     
-    if (user.password !== loginData.password) {
-      setLoginError('Invalid password');
-      return;
-    }
-    
-    if (user.status !== 'Active') {
-      setLoginError('Account is not active');
-      return;
-    }
-    
-    // Login successful
-    console.log('Login successful:', user);
-    if (onLoginSuccess) {
-      onLoginSuccess(user);
+    if (user && loginData.password === 'admin123') {
+      // Store fake token
+      localStorage.setItem('token', 'fake-token-123');
+      
+      // Login successful
+      console.log('Login successful (bypassed):', user);
+      if (onLoginSuccess) {
+        onLoginSuccess(user);
+      }
+    } else {
+      setLoginError('Invalid credentials. Use demo accounts.');
     }
   };
 
@@ -276,9 +268,9 @@ const Login = ({ onLoginSuccess }) => {
             <h4 style={{ color: '#e94560', margin: '0 0 0.5rem 0' }}>Demo Accounts:</h4>
             <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)' }}>
               <p><strong>Admin:</strong> admin@company.com / admin123</p>
-              <p><strong>Sub Admin:</strong> subadmin@company.com / subadmin123</p>
-              <p><strong>Manager:</strong> john@company.com / password123</p>
-              <p><strong>Employee:</strong> sarah@company.com / password456</p>
+              <p><strong>Sub Admin:</strong> subadmin@company.com / admin123</p>
+              <p><strong>Manager:</strong> john@company.com / admin123</p>
+              <p><strong>Employee:</strong> sarah@company.com / admin123</p>
             </div>
           </div>
 

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login</title>
+</head>
+<body>
+    <h2>Test Login</h2>
+    <button onclick="testLogin()">Login as Admin</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@company.com',
+                        password: 'admin123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        <h3>✅ Login Successful!</h3>
+                        <p>Token: ${data.token}</p>
+                        <p>User: ${data.user.name} (${data.user.role})</p>
+                        <button onclick="setToken('${data.token}')">Set Token in localStorage</button>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h3>❌ Login Failed</h3>
+                        <p>Error: ${data.message}</p>
+                        <button onclick="testLogin2()">Try with 'password'</button>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testLogin2() {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@company.com',
+                        password: 'password'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        <h3>✅ Login Successful!</h3>
+                        <p>Token: ${data.token}</p>
+                        <p>User: ${data.user.name} (${data.user.role})</p>
+                        <button onclick="setToken('${data.token}')">Set Token in localStorage</button>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h3>❌ Login Failed</h3>
+                        <p>Error: ${data.message}</p>
+                        <p>Try: admin@company.com with password: admin123 or password</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        function setToken(token) {
+            localStorage.setItem('token', token);
+            alert('Token set! Now refresh your main app.');
+        }
+    </script>
+</body>
+</html> 

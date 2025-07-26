@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Employee Manual & Issue Reporting</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; border: none; border-radius: 4px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .status { padding: 8px 12px; border-radius: 4px; margin: 10px 0; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .machine-item { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            background: #f9f9f9; 
+        }
+        .manual-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .manual-section {
+            background: #e9ecef;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Employee Manual & Issue Reporting</h1>
+        <p>This test verifies that View Manual and Report Issue functionality works properly in EmployeeDashboard</p>
+        
+        <div class="test-section">
+            <h2>📊 Current Machines Status</h2>
+            <button class="btn-primary" onclick="loadMachines()">Load Current Machines</button>
+            <div id="machinesData"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📖 Manual View Test</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Manual Content Preview</h3>
+                    <div class="manual-preview">
+                        <h4>📋 Basic Information</h4>
+                        <p><strong>Model:</strong> PL-2000</p>
+                        <p><strong>Serial Number:</strong> SN001</p>
+                        <p><strong>Location:</strong> Factory Floor 1</p>
+                        <p><strong>Status:</strong> Operational</p>
+                        
+                        <div class="manual-section">
+                            <h5>⚙️ Operating Instructions</h5>
+                            <ol>
+                                <li>Check machine status indicator lights</li>
+                                <li>Ensure safety guards are in place</li>
+                                <li>Press the green START button</li>
+                                <li>Wait for initialization (30-60 seconds)</li>
+                                <li>Verify all systems are operational</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="manual-section">
+                            <h5>⚠️ Safety Guidelines</h5>
+                            <ul>
+                                <li>Always wear appropriate PPE</li>
+                                <li>Never bypass safety interlocks</li>
+                                <li>Keep hands away from moving parts</li>
+                                <li>Report safety concerns immediately</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="manual-section">
+                            <h5>🔧 Troubleshooting</h5>
+                            <div style="background: #fff3cd; padding: 10px; border-radius: 4px; border-left: 3px solid #ffc107;">
+                                <strong>Machine won't start:</strong>
+                                <ul>
+                                    <li>Check power supply</li>
+                                    <li>Verify emergency stop</li>
+                                    <li>Check error messages</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Manual Features</h3>
+                    <ul>
+                        <li>✅ <strong>Basic Information</strong> - Machine details and specifications</li>
+                        <li>✅ <strong>Operating Instructions</strong> - Startup, operation, shutdown procedures</li>
+                        <li>✅ <strong>Technical Specifications</strong> - Capacity, power, manufacturer details</li>
+                        <li>✅ <strong>Safety Guidelines</strong> - PPE requirements and safety protocols</li>
+                        <li>✅ <strong>Troubleshooting</strong> - Common issues and solutions</li>
+                        <li>✅ <strong>Report Issue Button</strong> - Direct link to report problems</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🚨 Issue Reporting Test</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Issue Report Form Preview</h3>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                        <h4>Report Issue for Production Line A</h4>
+                        
+                        <div style="margin: 10px 0;">
+                            <label><strong>Issue Title *</strong></label><br>
+                            <input type="text" placeholder="Brief description of the issue" style="width: 100%; padding: 8px; margin: 5px 0;">
+                        </div>
+                        
+                        <div style="margin: 10px 0;">
+                            <label><strong>Issue Category</strong></label><br>
+                            <select style="width: 100%; padding: 8px; margin: 5px 0;">
+                                <option>Technical Issue</option>
+                                <option>Safety Concern</option>
+                                <option>Performance Problem</option>
+                                <option>Maintenance Required</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin: 10px 0;">
+                            <label><strong>Priority Level</strong></label><br>
+                            <select style="width: 100%; padding: 8px; margin: 5px 0;">
+                                <option>Low</option>
+                                <option>Medium</option>
+                                <option>High</option>
+                                <option>Urgent</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin: 10px 0;">
+                            <label><strong>Detailed Description *</strong></label><br>
+                            <textarea placeholder="Please provide detailed information about the issue..." rows="4" style="width: 100%; padding: 8px; margin: 5px 0;"></textarea>
+                        </div>
+                        
+                        <div style="margin: 15px 0;">
+                            <button class="btn-warning">Report Issue</button>
+                            <button class="btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Issue Report Features</h3>
+                    <ul>
+                        <li>✅ <strong>Issue Title</strong> - Brief description of the problem</li>
+                        <li>✅ <strong>Category Selection</strong> - Technical, Safety, Performance, etc.</li>
+                        <li>✅ <strong>Priority Level</strong> - Low, Medium, High, Urgent</li>
+                        <li>✅ <strong>Detailed Description</strong> - Comprehensive issue details</li>
+                        <li>✅ <strong>Auto Assignment</strong> - Automatically assigned to Manager</li>
+                        <li>✅ <strong>Task Creation</strong> - Creates a task for tracking</li>
+                        <li>✅ <strong>7-day Deadline</strong> - Sets reasonable response time</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 Test Issue Reporting</h2>
+            <button class="btn-success" onclick="testIssueReporting()">Test Issue Report Creation</button>
+            <div id="issueReportResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Verify Issue Report in Tasks</h2>
+            <button class="btn-primary" onclick="checkIssueTasks()">Check for Issue Report Tasks</button>
+            <div id="issueTasksResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🗑️ Cleanup Test Data</h2>
+            <button class="btn-danger" onclick="cleanupTestData()">Delete Test Issue Reports</button>
+            <div id="cleanupResult"></div>
+        </div>
+    </div>
+    
+    <script>
+        let testIssueIds = [];
+        
+        function showResult(elementId, message, type = 'info') {
+            const div = document.getElementById(elementId);
+            div.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        async function loadMachines() {
+            try {
+                const response = await fetch('http://localhost:5000/api/machines');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let result = `<h3>🏭 Available Machines (${data.data.length})</h3>`;
+                    data.data.forEach(machine => {
+                        result += `<div class="machine-item">`;
+                        result += `<h4>${machine.name}</h4>`;
+                        result += `<p><strong>Status:</strong> ${machine.status}</p>`;
+                        result += `<p><strong>Location:</strong> ${machine.location}</p>`;
+                        result += `<p><strong>Model:</strong> ${machine.model || 'Not specified'}</p>`;
+                        result += `<p><strong>Department:</strong> ${machine.department || 'Not specified'}</p>`;
+                        result += `<p><strong>ID:</strong> ${machine.id}</p>`;
+                        result += `</div>`;
+                    });
+                    
+                    document.getElementById('machinesData').innerHTML = result;
+                } else {
+                    showResult('machinesData', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('machinesData', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testIssueReporting() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Issue Report: Test Machine Problem',
+                        description: `Machine: Production Line A\nCategory: Technical\nPriority: Medium\n\nIssue Description:\nThis is a test issue report created to verify the functionality. The machine is making unusual noises during operation and the performance has decreased by 20%.`,
+                        assignedTo: '3', // Assign to Manager (John)
+                        machine: '1', // Production Line A
+                        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        priority: 'Medium',
+                        category: 'Issue Report'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    testIssueIds.push(data.data.id);
+                    showResult('issueReportResult', `✅ Test issue report created: ${data.data.title} (ID: ${data.data.id})`, 'success');
+                } else {
+                    showResult('issueReportResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('issueReportResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkIssueTasks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const issueTasks = data.data.filter(task => 
+                        task.title.includes('Issue Report') || task.category === 'Issue Report'
+                    );
+                    
+                    let result = `<h3>📋 Issue Report Tasks (${issueTasks.length})</h3>`;
+                    if (issueTasks.length > 0) {
+                        issueTasks.forEach(task => {
+                            result += `<div class="machine-item">`;
+                            result += `<h4>${task.title}</h4>`;
+                            result += `<p><strong>Status:</strong> ${task.status}</p>`;
+                            result += `<p><strong>Priority:</strong> ${task.priority}</p>`;
+                            result += `<p><strong>Assigned to:</strong> ${task.assignedTo}</p>`;
+                            result += `<p><strong>Machine:</strong> ${task.machine}</p>`;
+                            result += `<p><strong>Deadline:</strong> ${task.deadline}</p>`;
+                            result += `<p><strong>Description:</strong> ${task.description}</p>`;
+                            result += `</div>`;
+                        });
+                    } else {
+                        result += `<p>No issue report tasks found.</p>`;
+                    }
+                    
+                    document.getElementById('issueTasksResult').innerHTML = result;
+                } else {
+                    showResult('issueTasksResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('issueTasksResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function cleanupTestData() {
+            try {
+                let result = `<h4>🗑️ Cleaning up test issue reports</h4>`;
+                
+                for (const issueId of testIssueIds) {
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/tasks/${issueId}`, {
+                            method: 'DELETE'
+                        });
+                        if (response.ok) {
+                            result += `<p class="status success">✅ Test issue report ${issueId} deleted</p>`;
+                        } else {
+                            result += `<p class="status error">❌ Failed to delete issue report ${issueId}</p>`;
+                        }
+                    } catch (error) {
+                        result += `<p class="status error">❌ Error deleting issue report ${issueId}: ${error.message}</p>`;
+                    }
+                }
+                
+                testIssueIds = [];
+                result += `<p class="status info">🔄 Test data cleanup completed</p>`;
+                
+                document.getElementById('cleanupResult').innerHTML = result;
+            } catch (error) {
+                showResult('cleanupResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Task Creation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px; margin: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #f5f5f5; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Task Creation</h1>
+    
+    <div class="test">
+        <h3>1. Get Available Users</h3>
+        <button onclick="getUsers()">Get Users</button>
+        <div id="users-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Get Available Machines</h3>
+        <button onclick="getMachines()">Get Machines</button>
+        <div id="machines-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Create Test Task</h3>
+        <button onclick="createTask()">Create Task</button>
+        <div id="create-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. Get All Tasks</h3>
+        <button onclick="getTasks()">Get Tasks</button>
+        <div id="tasks-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        async function getUsers() {
+            const result = document.getElementById('users-result');
+            result.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const employees = data.data.filter(user => user.role === 'Employee');
+                    result.innerHTML = `
+                        <span class="success">✅ Found ${employees.length} employees</span>
+                        <ul>
+                            ${employees.map(user => `<li>${user.name} (${user.role})</li>`).join('')}
+                        </ul>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Error: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function getMachines() {
+            const result = document.getElementById('machines-result');
+            result.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/machines`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ Found ${data.data.length} machines</span>
+                        <ul>
+                            ${data.data.map(machine => `<li>${machine.name} (${machine.status})</li>`).join('')}
+                        </ul>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Error: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function createTask() {
+            const result = document.getElementById('create-result');
+            result.innerHTML = 'Creating task...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Task from Frontend',
+                        description: 'This is a test task created from the frontend',
+                        assignedTo: 'Sarah Employee',
+                        machine: 'Production Line A',
+                        deadline: '2025-08-15',
+                        priority: 'Medium'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ Task created successfully!</span>
+                        <p><strong>Task ID:</strong> ${data.data.id}</p>
+                        <p><strong>Title:</strong> ${data.data.title}</p>
+                        <p><strong>Assigned to:</strong> ${data.data.assignedTo}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Error: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function getTasks() {
+            const result = document.getElementById('tasks-result');
+            result.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ Found ${data.data.length} tasks</span>
+                        <ul>
+                            ${data.data.map(task => `<li>${task.title} - ${task.status} - Assigned to: ${task.assignedTo}</li>`).join('')}
+                        </ul>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Error: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html> 

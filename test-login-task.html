@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login & Task Assignment</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px; margin: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #f5f5f5; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Test Login & Task Assignment</h1>
+    
+    <div class="test">
+        <h3>1. Login as Admin</h3>
+        <button onclick="loginAdmin()">Login as Admin</button>
+        <div id="admin-login-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Create Task for Sarah Employee</h3>
+        <button onclick="createTaskForSarah()">Create Task for Sarah</button>
+        <div id="create-task-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Login as Sarah Employee</h3>
+        <button onclick="loginSarah()">Login as Sarah</button>
+        <div id="sarah-login-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. Check Sarah's Tasks</h3>
+        <button onclick="checkSarahTasks()">Check Tasks</button>
+        <div id="sarah-tasks-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>5. Clear Token</h3>
+        <button onclick="clearToken()">Clear Token</button>
+        <div id="clear-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        async function loginAdmin() {
+            const result = document.getElementById('admin-login-result');
+            result.innerHTML = 'Logging in as Admin...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@company.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    result.innerHTML = `
+                        <span class="success">✅ Admin logged in!</span>
+                        <p><strong>User:</strong> ${data.user.name} (${data.user.role})</p>
+                        <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Login failed: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function createTaskForSarah() {
+            const result = document.getElementById('create-task-result');
+            result.innerHTML = 'Creating task...';
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                result.innerHTML = '<span class="error">❌ Please login first!</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Task for Sarah',
+                        description: 'This task is specifically assigned to Sarah Employee',
+                        assignedTo: 'Sarah Employee',
+                        machine: 'Production Line A',
+                        deadline: '2025-08-25',
+                        priority: 'High'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ Task created for Sarah!</span>
+                        <p><strong>Task ID:</strong> ${data.data.id}</p>
+                        <p><strong>Title:</strong> ${data.data.title}</p>
+                        <p><strong>Assigned to:</strong> ${data.data.assignedTo}</p>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Error: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function loginSarah() {
+            const result = document.getElementById('sarah-login-result');
+            result.innerHTML = 'Logging in as Sarah...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'sarah@company.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    result.innerHTML = `
+                        <span class="success">✅ Sarah logged in!</span>
+                        <p><strong>User:</strong> ${data.user.name} (${data.user.role})</p>
+                        <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Login failed: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function checkSarahTasks() {
+            const result = document.getElementById('sarah-tasks-result');
+            result.innerHTML = 'Checking Sarah\'s tasks...';
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                result.innerHTML = '<span class="error">❌ Please login first!</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <span class="success">✅ Found ${data.data.length} tasks for Sarah</span>
+                        <ul>
+                            ${data.data.map(task => `<li>${task.title} - ${task.status} - Priority: ${task.priority}</li>`).join('')}
+                        </ul>
+                    `;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Error: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        function clearToken() {
+            localStorage.removeItem('token');
+            document.getElementById('clear-result').innerHTML = '<span class="success">✅ Token cleared!</span>';
+        }
+    </script>
+</body>
+</html> 

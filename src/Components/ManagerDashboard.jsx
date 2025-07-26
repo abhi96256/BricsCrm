@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -20,122 +20,99 @@ ChartJS.register(
   Legend
 );
 
+const API_BASE_URL = 'http://localhost:5000/api';
+
 const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [activeFilter, setActiveFilter] = useState('week');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
   const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [reassignData, setReassignData] = useState({
     newEmployee: '',
     notes: ''
   });
+  const [newTaskData, setNewTaskData] = useState({
+    title: '',
+    employee: '',
+    machine: '',
+    deadline: '',
+    priority: 'Medium',
+    description: ''
+  });
+  const [tasks, setTasks] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Sample data
-  const [tasks, setTasks] = useState([
-    { 
-      id: 1, 
-      title: 'Production Line Setup', 
-      assignedTo: 'Sarah Employee', 
-      assignedBy: 'Admin User',
-      deadline: '2024-02-15',
-      priority: 'High',
-      machine: 'Machine A',
-      status: 'In Progress',
-      progress: 75,
-      notes: 'Working on initial setup'
-    },
-    { 
-      id: 2, 
-      title: 'Quality Check', 
-      assignedTo: 'Mike Worker', 
-      assignedBy: 'Admin User',
-      deadline: '2024-02-10',
-      priority: 'Medium',
-      machine: 'Machine B',
-      status: 'Pending Approval',
-      progress: 100,
-      notes: 'Task completed, waiting for approval'
-    },
-    { 
-      id: 3, 
-      title: 'Maintenance Check', 
-      assignedTo: 'Sarah Employee', 
-      assignedBy: 'Admin User',
-      deadline: '2024-02-20',
-      priority: 'Low',
-      machine: 'Machine C',
-      status: 'Completed',
-      progress: 100,
-      notes: 'Maintenance completed successfully'
+  // Fetch all data on mount
+  useEffect(() => {
+    fetchTasks();
+    fetchEmployees();
+    fetchMachines();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Manager sees all tasks (they manage everything)
+        setTasks(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
     }
-  ]);
+  };
 
-  const [employees, setEmployees] = useState([
-    { 
-      id: 1, 
-      name: 'Sarah Employee', 
-      status: 'Active', 
-      currentTask: 'Production Line Setup',
-      tasksCompleted: 45,
-      totalTasks: 50,
-      efficiency: 92,
-      averageCompletionTime: '2.3 days',
-      currentTasks: 2,
-      pendingTasks: 1
-    },
-    { 
-      id: 2, 
-      name: 'Mike Worker', 
-      status: 'Active', 
-      currentTask: 'Quality Check',
-      tasksCompleted: 38,
-      totalTasks: 45,
-      efficiency: 87,
-      averageCompletionTime: '3.1 days',
-      currentTasks: 1,
-      pendingTasks: 2
-    },
-    { 
-      id: 3, 
-      name: 'John Doe', 
-      status: 'Available', 
-      currentTask: null,
-      tasksCompleted: 52,
-      totalTasks: 55,
-      efficiency: 95,
-      averageCompletionTime: '1.8 days',
-      currentTasks: 0,
-      pendingTasks: 0
-    },
-    { 
-      id: 4, 
-      name: 'Lisa Chen', 
-      status: 'Active', 
-      currentTask: 'Maintenance Check',
-      tasksCompleted: 28,
-      totalTasks: 35,
-      efficiency: 78,
-      averageCompletionTime: '4.2 days',
-      currentTasks: 3,
-      pendingTasks: 1
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/employees`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEmployees(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
     }
-  ]);
+  };
 
-  const [machines, setMachines] = useState([
-    { id: 1, name: 'Machine A', status: 'Operational', location: 'Production Floor 1' },
-    { id: 2, name: 'Machine B', status: 'Maintenance', location: 'Production Floor 2' },
-    { id: 3, name: 'Machine C', status: 'Operational', location: 'Production Floor 1' }
-  ]);
+  const fetchMachines = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/machines`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMachines(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching machines:', error);
+    }
+  };
 
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
   };
 
-  const openModal = (type, task = null) => {
+  const openModal = (type, task = null, employee = null) => {
     setModalType(type);
     setShowModal(true);
     if (task) {
       setSelectedTask(task);
+    }
+    if (employee) {
+      setSelectedEmployee(employee);
     }
   };
 
@@ -143,34 +120,112 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
     setShowModal(false);
     setModalType('');
     setSelectedTask(null);
+    setSelectedEmployee(null);
     setReassignData({ newEmployee: '', notes: '' });
+    setNewTaskData({
+      title: '',
+      employee: '',
+      machine: '',
+      deadline: '',
+      priority: 'Medium',
+      description: ''
+    });
   };
 
-  const handleApproveTask = (taskId) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, status: 'Completed' } : task
-    ));
+  const handleApproveTask = async (taskId) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'Completed' })
+      });
+      if (response.ok) {
+        await fetchTasks();
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      alert('Error approving task.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReassignTask = () => {
+  const handleReassignTask = async () => {
     if (!selectedTask || !reassignData.newEmployee) return;
-    
-    setTasks(prev => prev.map(task => 
-      task.id === selectedTask.id 
-        ? { 
-            ...task, 
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks/${selectedTask.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
             assignedTo: reassignData.newEmployee,
-            notes: reassignData.notes,
-            status: 'In Progress'
-          } 
-        : task
-    ));
-    closeModal();
+          notes: reassignData.notes
+        })
+      });
+      if (response.ok) {
+        await fetchTasks();
+        closeModal();
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      alert('Error reassigning task.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReassignInputChange = (e) => {
     const { name, value } = e.target;
     setReassignData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleAssignTask = async () => {
+    if (!newTaskData.title || !newTaskData.employee) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+      title: newTaskData.title,
+          description: newTaskData.description,
+      assignedTo: newTaskData.employee,
+          machine: newTaskData.machine,
+      deadline: newTaskData.deadline,
+          priority: newTaskData.priority
+        })
+      });
+      if (response.ok) {
+        await fetchTasks();
+    closeModal();
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      alert('Error creating task.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNewTaskInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewTaskData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -347,9 +402,9 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
             </div>
             <div className="task-details">
               <div className="task-info">
-                <span><strong>Assigned to:</strong> {task.assignedTo}</span>
+                <span><strong>Assigned to:</strong> {task.assignedTo ? (typeof task.assignedTo === 'string' ? task.assignedTo : task.assignedTo.name) : 'Not assigned'}</span>
                 <span><strong>Assigned by:</strong> {task.assignedBy}</span>
-                <span><strong>Machine:</strong> {task.machine}</span>
+                <span><strong>Machine:</strong> {task.machine ? (typeof task.machine === 'string' ? task.machine : task.machine.name) : 'Not assigned'}</span>
                 <span><strong>Deadline:</strong> {task.deadline}</span>
                 <span><strong>Status:</strong> {task.status}</span>
               </div>
@@ -366,7 +421,12 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
               )}
             </div>
             <div className="task-actions">
-              <button className="action-btn small">View Details</button>
+              <button 
+                className="action-btn small"
+                onClick={() => openModal('viewTaskDetails', task)}
+              >
+                View Details
+              </button>
               {task.status === 'Pending Approval' && (
                 <button 
                   className="action-btn small success" 
@@ -413,13 +473,23 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 )}
               </div>
               <div className="employee-stats">
-                <span>Tasks Completed: 12</span>
-                <span>Efficiency: 95%</span>
+                <span>Tasks Completed: {employee.tasksCompleted}</span>
+                <span>Efficiency: {employee.efficiency}%</span>
               </div>
             </div>
             <div className="employee-actions">
-              <button className="action-btn small">View Profile</button>
-              <button className="action-btn small">Assign Task</button>
+              <button 
+                className="action-btn small" 
+                onClick={() => openModal('viewProfile', null, employee)}
+              >
+                View Profile
+              </button>
+              <button 
+                className="action-btn small primary" 
+                onClick={() => openModal('assignTask', null, employee)}
+              >
+                Assign Task
+              </button>
             </div>
           </div>
         ))}
@@ -473,6 +543,9 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
               {modalType === 'addTask' && 'Add New Task'}
               {modalType === 'addMachine' && 'Add New Machine'}
               {modalType === 'reassign' && 'Reassign Task'}
+              {modalType === 'viewProfile' && 'Employee Profile'}
+              {modalType === 'assignTask' && 'Assign New Task'}
+              {modalType === 'viewTaskDetails' && 'Task Details'}
             </h2>
             <button className="close-btn" onClick={closeModal}>×</button>
           </div>
@@ -528,7 +601,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
             {modalType === 'reassign' && selectedTask && (
               <div className="form-group">
                 <label>Current Assignment</label>
-                <input type="text" value={selectedTask.assignedTo} disabled />
+                <input type="text" value={selectedTask.assignedTo ? (typeof selectedTask.assignedTo === 'string' ? selectedTask.assignedTo : selectedTask.assignedTo.name) : ''} disabled />
                 <label>Reassign to</label>
                 <select 
                   name="newEmployee" 
@@ -551,6 +624,138 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 <div className="modal-actions">
                   <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
                   <button className="action-btn primary" onClick={handleReassignTask}>Reassign</button>
+                </div>
+              </div>
+            )}
+            {modalType === 'viewProfile' && selectedEmployee && (
+              <div className="form-group">
+                <label>Employee Name</label>
+                <input type="text" value={selectedEmployee.name} disabled />
+                <label>Status</label>
+                <input type="text" value={selectedEmployee.status} disabled />
+                <label>Current Task</label>
+                <input type="text" value={selectedEmployee.currentTask || 'Available'} disabled />
+                <label>Tasks Completed</label>
+                <input type="text" value={`${selectedEmployee.tasksCompleted}/${selectedEmployee.totalTasks}`} disabled />
+                <label>Efficiency</label>
+                <input type="text" value={`${selectedEmployee.efficiency}%`} disabled />
+                <label>Average Completion Time</label>
+                <input type="text" value={selectedEmployee.averageCompletionTime} disabled />
+                <label>Current Tasks</label>
+                <input type="text" value={selectedEmployee.currentTasks} disabled />
+                <label>Pending Tasks</label>
+                <input type="text" value={selectedEmployee.pendingTasks} disabled />
+                <div className="modal-actions">
+                  <button className="action-btn secondary" onClick={closeModal}>Close</button>
+                </div>
+              </div>
+            )}
+            {modalType === 'assignTask' && selectedEmployee && (
+              <div className="form-group">
+                <label>Task Title</label>
+                <input 
+                  type="text" 
+                  name="title"
+                  value={newTaskData.title}
+                  onChange={handleNewTaskInputChange}
+                  placeholder="Enter task title" 
+                />
+                <label>Assign to Employee</label>
+                <select 
+                  name="employee"
+                  value={newTaskData.employee}
+                  onChange={handleNewTaskInputChange}
+                >
+                  <option value="">Select employee</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.name}>{emp.name}</option>
+                  ))}
+                </select>
+                <label>Machine</label>
+                <select 
+                  name="machine"
+                  value={newTaskData.machine}
+                  onChange={handleNewTaskInputChange}
+                >
+                  <option value="">Select machine</option>
+                  {machines.map(machine => (
+                    <option key={machine.id} value={machine.name}>{machine.name}</option>
+                  ))}
+                </select>
+                <label>Deadline</label>
+                <input 
+                  type="date" 
+                  name="deadline"
+                  value={newTaskData.deadline}
+                  onChange={handleNewTaskInputChange}
+                />
+                <label>Priority</label>
+                <select 
+                  name="priority"
+                  value={newTaskData.priority}
+                  onChange={handleNewTaskInputChange}
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+                <label>Description</label>
+                <textarea 
+                  name="description"
+                  value={newTaskData.description}
+                  onChange={handleNewTaskInputChange}
+                  placeholder="Enter task description"
+                  rows="3"
+                />
+                <div className="modal-actions">
+                  <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
+                  <button className="action-btn primary" onClick={handleAssignTask}>Assign Task</button>
+                </div>
+              </div>
+            )}
+            {modalType === 'viewTaskDetails' && selectedTask && (
+              <div className="form-group">
+                <label>Task Title</label>
+                <input type="text" value={selectedTask.title} disabled />
+                <label>Assigned To</label>
+                <input type="text" value={selectedTask.assignedTo ? (typeof selectedTask.assignedTo === 'string' ? selectedTask.assignedTo : selectedTask.assignedTo.name) : ''} disabled />
+                <label>Assigned By</label>
+                <input type="text" value={selectedTask.assignedBy} disabled />
+                <label>Machine</label>
+                <input type="text" value={selectedTask.machine ? (typeof selectedTask.machine === 'string' ? selectedTask.machine : selectedTask.machine.name) : ''} disabled />
+                <label>Deadline</label>
+                <input type="text" value={selectedTask.deadline} disabled />
+                <label>Priority</label>
+                <input type="text" value={selectedTask.priority} disabled />
+                <label>Status</label>
+                <input type="text" value={selectedTask.status} disabled />
+                <label>Progress</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="text" value={`${selectedTask.progress}%`} disabled style={{ flex: 1 }} />
+                  <div className="progress-bar" style={{ width: '100px', height: '8px' }}>
+                    <div className="progress-fill" style={{width: `${selectedTask.progress}%`}}></div>
+                  </div>
+                </div>
+                <label>Notes</label>
+                <textarea 
+                  value={selectedTask.notes || 'No notes available'} 
+                  disabled 
+                  rows="4"
+                  style={{ resize: 'none' }}
+                />
+                <div className="modal-actions">
+                  <button className="action-btn secondary" onClick={closeModal}>Close</button>
+                  {selectedTask.status === 'Pending Approval' && (
+                    <button 
+                      className="action-btn primary" 
+                      onClick={() => {
+                        handleApproveTask(selectedTask.id);
+                        closeModal();
+                      }}
+                    >
+                      Approve Task
+                    </button>
+                  )}
                 </div>
               </div>
             )}

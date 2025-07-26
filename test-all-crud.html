@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test All CRUD Operations</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .crud-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .crud-card { padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .status { padding: 5px 10px; border-radius: 3px; margin: 5px 0; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test All CRUD Operations</h1>
+    
+    <div class="test-section">
+        <h2>📊 Current Database Status</h2>
+        <button onclick="showCurrentDB()">Show Current Database</button>
+        <div id="currentDB"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>👥 User Management (CRUD)</h2>
+        <div class="crud-grid">
+            <div class="crud-card">
+                <h3>Create User</h3>
+                <button onclick="createNewUser()">Create Test User</button>
+                <div id="createUserResult"></div>
+            </div>
+            <div class="crud-card">
+                <h3>Read Users</h3>
+                <button onclick="readAllUsers()">Get All Users</button>
+                <div id="readUsersResult"></div>
+            </div>
+            <div class="crud-card">
+                <h3>Update User</h3>
+                <button onclick="updateUser()">Update User</button>
+                <div id="updateUserResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Task Management (CRUD)</h2>
+        <div class="crud-grid">
+            <div class="crud-card">
+                <h3>Create Task</h3>
+                <button onclick="createNewTask()">Create Test Task</button>
+                <div id="createTaskResult"></div>
+            </div>
+            <div class="crud-card">
+                <h3>Read Tasks</h3>
+                <button onclick="readAllTasks()">Get All Tasks</button>
+                <div id="readTasksResult"></div>
+            </div>
+            <div class="crud-card">
+                <h3>Update Task</h3>
+                <button onclick="updateTask()">Update Task</button>
+                <div id="updateTaskResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏭 Machine Management (CRUD)</h2>
+        <div class="crud-grid">
+            <div class="crud-card">
+                <h3>Create Machine</h3>
+                <button onclick="createNewMachine()">Create Test Machine</button>
+                <div id="createMachineResult"></div>
+            </div>
+            <div class="crud-card">
+                <h3>Read Machines</h3>
+                <button onclick="readAllMachines()">Get All Machines</button>
+                <div id="readMachinesResult"></div>
+            </div>
+            <div class="crud-card">
+                <h3>Update Machine</h3>
+                <button onclick="updateMachine()">Update Machine</button>
+                <div id="updateMachineResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🗑️ Delete Operations</h2>
+        <button onclick="deleteTestData()">Delete Test Data</button>
+        <div id="deleteResult"></div>
+    </div>
+    
+    <script>
+        let createdIds = {
+            userId: null,
+            taskId: null,
+            machineId: null
+        };
+        
+        function showResult(elementId, message, type = 'info') {
+            const div = document.getElementById(elementId);
+            div.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        async function showCurrentDB() {
+            try {
+                const [usersRes, tasksRes, machinesRes] = await Promise.all([
+                    fetch('http://localhost:5000/api/users'),
+                    fetch('http://localhost:5000/api/tasks'),
+                    fetch('http://localhost:5000/api/machines')
+                ]);
+                
+                const users = await usersRes.json();
+                const tasks = await tasksRes.json();
+                const machines = await machinesRes.json();
+                
+                let result = `<h3>📊 Current Database Status</h3>`;
+                result += `<div class="crud-grid">`;
+                
+                result += `<div class="crud-card">`;
+                result += `<h4>Users (${users.data.length})</h4>`;
+                users.data.forEach(user => {
+                    result += `<p>• ${user.name} (${user.role})</p>`;
+                });
+                result += `</div>`;
+                
+                result += `<div class="crud-card">`;
+                result += `<h4>Tasks (${tasks.data.length})</h4>`;
+                tasks.data.slice(0, 3).forEach(task => {
+                    result += `<p>• ${task.title} (${task.status})</p>`;
+                });
+                if (tasks.data.length > 3) {
+                    result += `<p>... and ${tasks.data.length - 3} more</p>`;
+                }
+                result += `</div>`;
+                
+                result += `<div class="crud-card">`;
+                result += `<h4>Machines (${machines.data.length})</h4>`;
+                machines.data.forEach(machine => {
+                    result += `<p>• ${machine.name} (${machine.status})</p>`;
+                });
+                result += `</div>`;
+                
+                result += `</div>`;
+                
+                document.getElementById('currentDB').innerHTML = result;
+            } catch (error) {
+                showResult('currentDB', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createNewUser() {
+            try {
+                const response = await fetch('http://localhost:5000/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Test User ' + Date.now(),
+                        email: 'test' + Date.now() + '@company.com',
+                        password: 'test123',
+                        role: 'Employee'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    createdIds.userId = data.data.id;
+                    showResult('createUserResult', `✅ User created: ${data.data.name} (ID: ${data.data.id})`, 'success');
+                } else {
+                    showResult('createUserResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('createUserResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function readAllUsers() {
+            try {
+                const response = await fetch('http://localhost:5000/api/users');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let result = `<h4>All Users (${data.data.length})</h4>`;
+                    data.data.forEach(user => {
+                        result += `<p>• ${user.name} (${user.role}) - ${user.email}</p>`;
+                    });
+                    showResult('readUsersResult', result, 'success');
+                } else {
+                    showResult('readUsersResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('readUsersResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateUser() {
+            if (!createdIds.userId) {
+                showResult('updateUserResult', `❌ No user created yet. Create a user first.`, 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${createdIds.userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Updated Test User',
+                        department: 'Updated Department'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showResult('updateUserResult', `✅ User updated: ${data.data.name}`, 'success');
+                } else {
+                    showResult('updateUserResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('updateUserResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createNewTask() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Test Task ' + Date.now(),
+                        description: 'This is a test task for CRUD testing',
+                        assignedTo: '4', // Sarah
+                        machine: '1',
+                        deadline: '2025-08-30',
+                        priority: 'Medium'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    createdIds.taskId = data.data.id;
+                    showResult('createTaskResult', `✅ Task created: ${data.data.title} (ID: ${data.data.id})`, 'success');
+                } else {
+                    showResult('createTaskResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('createTaskResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function readAllTasks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let result = `<h4>All Tasks (${data.data.length})</h4>`;
+                    data.data.slice(0, 5).forEach(task => {
+                        result += `<p>• ${task.title} (${task.status}) - Assigned to: ${task.assignedTo}</p>`;
+                    });
+                    if (data.data.length > 5) {
+                        result += `<p>... and ${data.data.length - 5} more</p>`;
+                    }
+                    showResult('readTasksResult', result, 'success');
+                } else {
+                    showResult('readTasksResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('readTasksResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateTask() {
+            if (!createdIds.taskId) {
+                showResult('updateTaskResult', `❌ No task created yet. Create a task first.`, 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/tasks/${createdIds.taskId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        status: 'In Progress',
+                        progress: 50
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showResult('updateTaskResult', `✅ Task updated: ${data.data.title} (Status: ${data.data.status})`, 'success');
+                } else {
+                    showResult('updateTaskResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('updateTaskResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createNewMachine() {
+            try {
+                const response = await fetch('http://localhost:5000/api/machines', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Test Machine ' + Date.now(),
+                        model: 'TM-1000',
+                        serialNumber: 'SN' + Date.now(),
+                        status: 'Operational',
+                        location: 'Test Location',
+                        department: 'Testing'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    createdIds.machineId = data.data.id;
+                    showResult('createMachineResult', `✅ Machine created: ${data.data.name} (ID: ${data.data.id})`, 'success');
+                } else {
+                    showResult('createMachineResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('createMachineResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function readAllMachines() {
+            try {
+                const response = await fetch('http://localhost:5000/api/machines');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let result = `<h4>All Machines (${data.data.length})</h4>`;
+                    data.data.forEach(machine => {
+                        result += `<p>• ${machine.name} (${machine.status}) - ${machine.location}</p>`;
+                    });
+                    showResult('readMachinesResult', result, 'success');
+                } else {
+                    showResult('readMachinesResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('readMachinesResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateMachine() {
+            if (!createdIds.machineId) {
+                showResult('updateMachineResult', `❌ No machine created yet. Create a machine first.`, 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/machines/${createdIds.machineId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        status: 'Maintenance',
+                        location: 'Updated Location'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showResult('updateMachineResult', `✅ Machine updated: ${data.data.name} (Status: ${data.data.status})`, 'success');
+                } else {
+                    showResult('updateMachineResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('updateMachineResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function deleteTestData() {
+            try {
+                let result = `<h4>🗑️ Deleting Test Data</h4>`;
+                
+                // Delete created task
+                if (createdIds.taskId) {
+                    try {
+                        const taskResponse = await fetch(`http://localhost:5000/api/tasks/${createdIds.taskId}`, {
+                            method: 'DELETE'
+                        });
+                        if (taskResponse.ok) {
+                            result += `<p class="status success">✅ Test task deleted</p>`;
+                        } else {
+                            result += `<p class="status error">❌ Failed to delete task</p>`;
+                        }
+                    } catch (error) {
+                        result += `<p class="status error">❌ Error deleting task: ${error.message}</p>`;
+                    }
+                }
+                
+                // Delete created machine
+                if (createdIds.machineId) {
+                    try {
+                        const machineResponse = await fetch(`http://localhost:5000/api/machines/${createdIds.machineId}`, {
+                            method: 'DELETE'
+                        });
+                        if (machineResponse.ok) {
+                            result += `<p class="status success">✅ Test machine deleted</p>`;
+                        } else {
+                            result += `<p class="status error">❌ Failed to delete machine</p>`;
+                        }
+                    } catch (error) {
+                        result += `<p class="status error">❌ Error deleting machine: ${error.message}</p>`;
+                    }
+                }
+                
+                // Delete created user
+                if (createdIds.userId) {
+                    try {
+                        const userResponse = await fetch(`http://localhost:5000/api/users/${createdIds.userId}`, {
+                            method: 'DELETE'
+                        });
+                        if (userResponse.ok) {
+                            result += `<p class="status success">✅ Test user deleted</p>`;
+                        } else {
+                            result += `<p class="status error">❌ Failed to delete user</p>`;
+                        }
+                    } catch (error) {
+                        result += `<p class="status error">❌ Error deleting user: ${error.message}</p>`;
+                    }
+                }
+                
+                // Reset created IDs
+                createdIds = { userId: null, taskId: null, machineId: null };
+                
+                result += `<p class="status info">🔄 Test data cleanup completed</p>`;
+                
+                document.getElementById('deleteResult').innerHTML = result;
+            } catch (error) {
+                showResult('deleteResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

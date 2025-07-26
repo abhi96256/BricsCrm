@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Backend API Test</h1>
+    
+    <h2>1. Test Health Check</h2>
+    <button onclick="testHealth()">Test Health</button>
+    <div id="health-result"></div>
+    
+    <h2>2. Test Login</h2>
+    <input type="email" id="email" placeholder="Email" value="admin@company.com"><br>
+    <input type="password" id="password" placeholder="Password" value="admin123"><br>
+    <select id="role">
+        <option value="Admin">Admin</option>
+        <option value="Manager">Manager</option>
+        <option value="Employee">Employee</option>
+    </select><br>
+    <button onclick="testLogin()">Login</button>
+    <div id="login-result"></div>
+    
+    <h2>3. Test Tasks API</h2>
+    <button onclick="testTasks()">Get Tasks</button>
+    <div id="tasks-result"></div>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                document.getElementById('health-result').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('health-result').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const role = document.getElementById('role').value;
+                
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password, role })
+                });
+                
+                const data = await response.json();
+                document.getElementById('login-result').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+                if (data.success && data.token) {
+                    localStorage.setItem('token', data.token);
+                    alert('Login successful! Token saved to localStorage.');
+                }
+            } catch (error) {
+                document.getElementById('login-result').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testTasks() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    document.getElementById('tasks-result').innerHTML = 
+                        `<p style="color: red;">No token found. Please login first.</p>`;
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/tasks`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                document.getElementById('tasks-result').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('tasks-result').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html> 

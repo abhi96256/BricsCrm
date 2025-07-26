@@ -1,0 +1,535 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Admin User",
+      "email": "admin@company.com",
+      "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "role": "Admin",
+      "status": "Active",
+      "avatar": "",
+      "department": "IT",
+      "phone": "",
+      "address": "",
+      "lastLogin": null,
+      "emailVerified": true,
+      "twoFactorEnabled": false,
+      "createdAt": "2025-07-26T12:22:16.344Z",
+      "updatedAt": "2025-07-26T12:22:16.345Z"
+    },
+    {
+      "id": "2",
+      "name": "Sub Admin User",
+      "email": "subadmin@company.com",
+      "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "role": "Sub Admin",
+      "status": "Active",
+      "avatar": "",
+      "department": "Management",
+      "phone": "",
+      "address": "",
+      "lastLogin": null,
+      "emailVerified": true,
+      "twoFactorEnabled": false,
+      "createdAt": "2025-07-26T12:22:16.345Z",
+      "updatedAt": "2025-07-26T12:22:16.345Z"
+    },
+    {
+      "id": "3",
+      "name": "John Manager",
+      "email": "john@company.com",
+      "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "role": "Manager",
+      "status": "Active",
+      "avatar": "",
+      "department": "Production",
+      "phone": "",
+      "address": "",
+      "lastLogin": null,
+      "emailVerified": true,
+      "twoFactorEnabled": false,
+      "createdAt": "2025-07-26T12:22:16.345Z",
+      "updatedAt": "2025-07-26T12:22:16.345Z"
+    },
+    {
+      "id": "4",
+      "name": "Sarah Employee",
+      "email": "sarah@company.com",
+      "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "role": "Employee",
+      "status": "Active",
+      "avatar": "",
+      "department": "Production",
+      "phone": "",
+      "address": "",
+      "lastLogin": null,
+      "emailVerified": true,
+      "twoFactorEnabled": false,
+      "createdAt": "2025-07-26T12:22:16.345Z",
+      "updatedAt": "2025-07-26T12:22:16.345Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Production Line Maintenance",
+      "description": "Perform routine maintenance on Production Line A",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-08-02T12:22:16.345Z",
+      "priority": "High",
+      "status": "In Progress",
+      "progress": 48,
+      "machine": "1",
+      "category": "Maintenance",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T12:22:16.345Z",
+      "updatedAt": "2025-07-26T17:16:55.264Z"
+    },
+    {
+      "id": "2",
+      "title": "Quality Check Process",
+      "description": "Conduct quality checks on new batch",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-29T12:22:16.345Z",
+      "priority": "Medium",
+      "status": "In Progress",
+      "progress": 30,
+      "machine": "2",
+      "category": "Quality Control",
+      "attachments": [],
+      "comments": [
+        {
+          "id": "1",
+          "user": "4",
+          "userName": "Sarah Employee",
+          "comment": "Started quality checks on batch #1234",
+          "createdAt": "2025-07-26T12:22:16.345Z"
+        }
+      ],
+      "createdBy": "3",
+      "createdAt": "2025-07-26T12:22:16.345Z",
+      "updatedAt": "2025-07-26T12:22:16.345Z"
+    },
+    {
+      "id": "ceeea8e5-8fc7-4f1f-a4b9-0f099f0d0be0",
+      "title": "njds",
+      "description": "dms ",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": null,
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T12:28:51.829Z",
+      "updatedAt": "2025-07-26T12:28:51.829Z"
+    },
+    {
+      "id": "3da30cc9-9857-47ed-bfb2-cae6816e7d7c",
+      "title": "njds",
+      "description": "dms ",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": null,
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T12:30:15.484Z",
+      "updatedAt": "2025-07-26T12:30:15.484Z"
+    },
+    {
+      "id": "e64491cf-af51-4fc5-80b8-68c4c1f0d351",
+      "title": "njds",
+      "description": "dms ",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": null,
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T12:30:53.932Z",
+      "updatedAt": "2025-07-26T12:30:53.932Z"
+    },
+    {
+      "id": "66c90f56-73f4-4897-9fc3-654dbf375c7a",
+      "title": "kmcs x",
+      "description": "d mxz",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": null,
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T12:41:40.291Z",
+      "updatedAt": "2025-07-26T12:41:40.291Z"
+    },
+    {
+      "id": "f5cca908-2b65-4786-8339-139e9ecd4cc6",
+      "title": "hlo ",
+      "description": "jdnsdnsj",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "1",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:02:16.100Z",
+      "updatedAt": "2025-07-26T17:02:16.100Z"
+    },
+    {
+      "id": "f50bf8ca-1463-446f-9e80-37a329fdb23f",
+      "title": "hlo ",
+      "description": "jdnsdnsj",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "1",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:02:44.029Z",
+      "updatedAt": "2025-07-26T17:02:44.029Z"
+    },
+    {
+      "id": "2a665d74-b807-4a7e-a281-01b084dab3ff",
+      "title": "hlo ",
+      "description": "jdnsdnsj",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "1",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:02:47.952Z",
+      "updatedAt": "2025-07-26T17:02:47.952Z"
+    },
+    {
+      "id": "1bc12b01-73c4-4ff4-97bc-c8ef752a5fad",
+      "title": "hlo ",
+      "description": "jdnsdnsj",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "1",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:02:53.850Z",
+      "updatedAt": "2025-07-26T17:02:53.850Z"
+    },
+    {
+      "id": "e17f2fac-1e51-48ff-8fbd-0153676bec6d",
+      "title": "hlo ",
+      "description": "jdnsdnsj",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "1",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:02:54.334Z",
+      "updatedAt": "2025-07-26T17:02:54.334Z"
+    },
+    {
+      "id": "a50828ee-11ba-4265-a731-1d9bcc0ad1d7",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:03:29.785Z",
+      "updatedAt": "2025-07-26T17:03:29.785Z"
+    },
+    {
+      "id": "26285a8a-6e24-4bbc-b176-3a3cee3aad3d",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:04:03.090Z",
+      "updatedAt": "2025-07-26T17:04:03.090Z"
+    },
+    {
+      "id": "ac809753-5d16-443f-b999-ed1e6a58a106",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:04:03.862Z",
+      "updatedAt": "2025-07-26T17:04:03.862Z"
+    },
+    {
+      "id": "e589550e-fb9d-4410-9b4c-33fc06182521",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:04:04.731Z",
+      "updatedAt": "2025-07-26T17:04:04.731Z"
+    },
+    {
+      "id": "1f727d2a-7ae1-45e6-930e-da2959d67495",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:04:04.995Z",
+      "updatedAt": "2025-07-26T17:04:04.995Z"
+    },
+    {
+      "id": "5d7301fc-9018-4be3-bfba-d7e4bd80b49a",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:04:05.409Z",
+      "updatedAt": "2025-07-26T17:04:05.409Z"
+    },
+    {
+      "id": "7ed6e5d7-8b50-40a3-80c0-0cd34bfae1a3",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:04:14.142Z",
+      "updatedAt": "2025-07-26T17:04:14.142Z"
+    },
+    {
+      "id": "9c17094e-5a03-40b8-a852-58c675801efd",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "In Progress",
+      "progress": 63,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:04:14.695Z",
+      "updatedAt": "2025-07-26T17:17:06.308Z"
+    },
+    {
+      "id": "259f1e31-481a-4468-81de-041ad0c00464",
+      "title": "hlo bhai ",
+      "description": "newnjedms",
+      "assignedTo": "4",
+      "employees": [
+        "4"
+      ],
+      "deadline": "2025-07-31",
+      "priority": "Medium",
+      "status": "Pending",
+      "progress": 0,
+      "machine": "2",
+      "category": "General",
+      "attachments": [],
+      "comments": [],
+      "createdBy": "1",
+      "createdAt": "2025-07-26T17:04:14.844Z",
+      "updatedAt": "2025-07-26T17:04:14.844Z"
+    }
+  ],
+  "machines": [
+    {
+      "id": "1",
+      "name": "Production Line A",
+      "model": "PL-2000",
+      "serialNumber": "SN001",
+      "status": "Operational",
+      "location": "Factory Floor 1",
+      "department": "Production",
+      "efficiency": 95,
+      "assignedTechnician": "3",
+      "maintenance": {
+        "lastMaintenance": "2025-07-26T12:22:16.345Z",
+        "nextMaintenance": "2025-08-25T12:22:16.345Z",
+        "interval": 30
+      },
+      "specifications": {
+        "capacity": "1000 units/hour",
+        "power": "50kW",
+        "manufacturer": "TechCorp"
+      },
+      "alerts": [],
+      "maintenanceHistory": [],
+      "createdAt": "2025-07-26T12:22:16.345Z",
+      "updatedAt": "2025-07-26T12:22:16.345Z"
+    },
+    {
+      "id": "2",
+      "name": "Quality Control Machine",
+      "model": "QC-500",
+      "serialNumber": "SN002",
+      "status": "Operational",
+      "location": "QC Lab",
+      "department": "Quality",
+      "efficiency": 88,
+      "assignedTechnician": "3",
+      "maintenance": {
+        "lastMaintenance": "2025-07-26T12:22:16.345Z",
+        "nextMaintenance": "2025-08-10T12:22:16.345Z",
+        "interval": 15
+      },
+      "specifications": {
+        "capacity": "500 tests/hour",
+        "accuracy": "99.9%",
+        "manufacturer": "QualityTech"
+      },
+      "alerts": [],
+      "maintenanceHistory": [],
+      "createdAt": "2025-07-26T12:22:16.345Z",
+      "updatedAt": "2025-07-26T12:22:16.345Z"
+    }
+  ],
+  "sessions": []
+}

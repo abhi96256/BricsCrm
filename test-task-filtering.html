@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Task Filtering</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .user-tasks { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Task Filtering by User Role</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Create Test Tasks</h2>
+        <button onclick="createTaskForSarah()">Create Task for Sarah</button>
+        <button onclick="createTaskForJohn()">Create Task for John</button>
+        <button onclick="createTaskForAdmin()">Create Task for Admin</button>
+        <div id="createResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Task Filtering by Role</h2>
+        <button onclick="testSarahView()">Test Sarah's View (Employee)</button>
+        <button onclick="testJohnView()">Test John's View (Manager)</button>
+        <button onclick="testAdminView()">Test Admin's View (Admin)</button>
+        <button onclick="testSubAdminView()">Test Sub Admin's View</button>
+        <div id="filterResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Show All Tasks</h2>
+        <button onclick="showAllTasks()">Show All Tasks in Database</button>
+        <div id="allTasksResult"></div>
+    </div>
+    
+    <script>
+        function showResult(elementId, message, isSuccess = true) {
+            const div = document.getElementById(elementId);
+            div.innerHTML = `<div class="${isSuccess ? 'success' : 'error'}">${message}</div>`;
+        }
+        
+        async function createTaskForSarah() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Test Task for Sarah Only',
+                        description: 'This task should only appear in Sarah\'s dashboard',
+                        assignedTo: '4', // Sarah's ID
+                        machine: '1',
+                        deadline: '2025-08-20',
+                        priority: 'High'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showResult('createResult', `✅ Task created for Sarah: ${data.data.title}`);
+                } else {
+                    showResult('createResult', `❌ Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('createResult', `❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function createTaskForJohn() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Test Task for John Only',
+                        description: 'This task should only appear in John\'s dashboard',
+                        assignedTo: '3', // John's ID
+                        machine: '2',
+                        deadline: '2025-08-25',
+                        priority: 'Medium'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showResult('createResult', `✅ Task created for John: ${data.data.title}`);
+                } else {
+                    showResult('createResult', `❌ Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('createResult', `❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function createTaskForAdmin() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Test Task for Admin Only',
+                        description: 'This task should only appear in Admin\'s dashboard',
+                        assignedTo: '1', // Admin's ID
+                        machine: '3',
+                        deadline: '2025-08-30',
+                        priority: 'Low'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showResult('createResult', `✅ Task created for Admin: ${data.data.title}`);
+                } else {
+                    showResult('createResult', `❌ Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('createResult', `❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function testSarahView() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Filter tasks for Sarah (Employee role)
+                    const sarahTasks = data.data.filter(task => task.assignedTo === '4');
+                    
+                    let result = `<h3>Sarah's View (Employee Role)</h3>`;
+                    result += `<p><strong>Total tasks in system:</strong> ${data.data.length}</p>`;
+                    result += `<p><strong>Sarah's tasks:</strong> ${sarahTasks.length}</p>`;
+                    
+                    if (sarahTasks.length > 0) {
+                        result += `<div class="user-tasks"><h4>Sarah's Tasks:</h4>`;
+                        sarahTasks.forEach(task => {
+                            result += `<p>• ${task.title} (${task.priority})</p>`;
+                        });
+                        result += `</div>`;
+                    } else {
+                        result += `<p class="error">❌ Sarah has no tasks assigned!</p>`;
+                    }
+                    
+                    document.getElementById('filterResult').innerHTML = result;
+                } else {
+                    showResult('filterResult', `❌ Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('filterResult', `❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function testJohnView() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Manager sees all tasks
+                    let result = `<h3>John's View (Manager Role)</h3>`;
+                    result += `<p><strong>Total tasks in system:</strong> ${data.data.length}</p>`;
+                    result += `<p><strong>Manager sees all tasks</strong></p>`;
+                    
+                    if (data.data.length > 0) {
+                        result += `<div class="user-tasks"><h4>All Tasks:</h4>`;
+                        data.data.forEach(task => {
+                            result += `<p>• ${task.title} (Assigned to: ${task.assignedTo})</p>`;
+                        });
+                        result += `</div>`;
+                    }
+                    
+                    document.getElementById('filterResult').innerHTML = result;
+                } else {
+                    showResult('filterResult', `❌ Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('filterResult', `❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function testAdminView() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Admin sees all tasks
+                    let result = `<h3>Admin's View (Admin Role)</h3>`;
+                    result += `<p><strong>Total tasks in system:</strong> ${data.data.length}</p>`;
+                    result += `<p><strong>Admin sees all tasks</strong></p>`;
+                    
+                    if (data.data.length > 0) {
+                        result += `<div class="user-tasks"><h4>All Tasks:</h4>`;
+                        data.data.forEach(task => {
+                            result += `<p>• ${task.title} (Assigned to: ${task.assignedTo})</p>`;
+                        });
+                        result += `</div>`;
+                    }
+                    
+                    document.getElementById('filterResult').innerHTML = result;
+                } else {
+                    showResult('filterResult', `❌ Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('filterResult', `❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function testSubAdminView() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Sub Admin sees all tasks
+                    let result = `<h3>Sub Admin's View (Sub Admin Role)</h3>`;
+                    result += `<p><strong>Total tasks in system:</strong> ${data.data.length}</p>`;
+                    result += `<p><strong>Sub Admin sees all tasks</strong></p>`;
+                    
+                    if (data.data.length > 0) {
+                        result += `<div class="user-tasks"><h4>All Tasks:</h4>`;
+                        data.data.forEach(task => {
+                            result += `<p>• ${task.title} (Assigned to: ${task.assignedTo})</p>`;
+                        });
+                        result += `</div>`;
+                    }
+                    
+                    document.getElementById('filterResult').innerHTML = result;
+                } else {
+                    showResult('filterResult', `❌ Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('filterResult', `❌ Error: ${error.message}`, false);
+            }
+        }
+        
+        async function showAllTasks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let result = `<h3>All Tasks in Database</h3>`;
+                    result += `<p><strong>Total tasks:</strong> ${data.data.length}</p>`;
+                    
+                    if (data.data.length > 0) {
+                        result += `<pre>${JSON.stringify(data.data.map(t => ({
+                            id: t.id,
+                            title: t.title,
+                            assignedTo: t.assignedTo,
+                            priority: t.priority,
+                            status: t.status
+                        })), null, 2)}</pre>`;
+                    } else {
+                        result += `<p>No tasks found in database.</p>`;
+                    }
+                    
+                    document.getElementById('allTasksResult').innerHTML = result;
+                } else {
+                    showResult('allTasksResult', `❌ Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult('allTasksResult', `❌ Error: ${error.message}`, false);
+            }
+        }
+    </script>
+</body>
+</html> 

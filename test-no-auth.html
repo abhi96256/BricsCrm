@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Without Authentication</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Test Without Authentication</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Check Backend Health</h2>
+        <button onclick="checkHealth()">Check Backend Health</button>
+        <div id="healthResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test API Calls (No Auth Required)</h2>
+        <button onclick="testUsers()">Test Users API</button>
+        <button onclick="testTasks()">Test Tasks API</button>
+        <button onclick="testMachines()">Test Machines API</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Task Creation</h2>
+        <button onclick="createTask()">Create Test Task for Sarah</button>
+        <div id="createResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Check Sarah's Tasks</h2>
+        <button onclick="checkSarahTasks()">Check Sarah's Tasks</button>
+        <div id="sarahResult"></div>
+    </div>
+    
+    <script>
+        async function checkHealth() {
+            try {
+                const response = await fetch('http://localhost:5000/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('healthResult').innerHTML = `
+                        <p class="success">✅ Backend is running!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('healthResult').innerHTML = `
+                        <p class="error">❌ Backend error: ${data.message}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('healthResult').innerHTML = `
+                    <p class="error">❌ Backend not reachable: ${error.message}</p>
+                `;
+            }
+        }
+
+        async function testUsers() {
+            try {
+                const response = await fetch('http://localhost:5000/api/users');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('apiResult').innerHTML = `
+                        <p class="success">✅ Users API works!</p>
+                        <p>Found ${data.data.length} users</p>
+                        <pre>${JSON.stringify(data.data.map(u => ({ id: u.id, name: u.name, role: u.role })), null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('apiResult').innerHTML = `
+                        <p class="error">❌ Users API failed: ${data.message}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('apiResult').innerHTML = `
+                    <p class="error">❌ Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        async function testTasks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('apiResult').innerHTML = `
+                        <p class="success">✅ Tasks API works!</p>
+                        <p>Found ${data.data.length} tasks</p>
+                        <pre>${JSON.stringify(data.data.map(t => ({ id: t.id, title: t.title, assignedTo: t.assignedTo })), null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('apiResult').innerHTML = `
+                        <p class="error">❌ Tasks API failed: ${data.message}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('apiResult').innerHTML = `
+                    <p class="error">❌ Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        async function testMachines() {
+            try {
+                const response = await fetch('http://localhost:5000/api/machines');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('apiResult').innerHTML = `
+                        <p class="success">✅ Machines API works!</p>
+                        <p>Found ${data.data.length} machines</p>
+                        <pre>${JSON.stringify(data.data.map(m => ({ id: m.id, name: m.name, status: m.status })), null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('apiResult').innerHTML = `
+                        <p class="error">❌ Machines API failed: ${data.message}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('apiResult').innerHTML = `
+                    <p class="error">❌ Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        async function createTask() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Task for Sarah',
+                        description: 'This is a test task created without authentication',
+                        assignedTo: '4', // Sarah's ID
+                        machine: '1', // Machine A
+                        deadline: '2025-08-15',
+                        priority: 'Medium'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('createResult').innerHTML = `
+                        <p class="success">✅ Task created successfully!</p>
+                        <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('createResult').innerHTML = `
+                        <p class="error">❌ Task creation failed: ${data.message}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('createResult').innerHTML = `
+                    <p class="error">❌ Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        async function checkSarahTasks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Filter tasks for Sarah (ID: 4)
+                    const sarahTasks = data.data.filter(task => task.assignedTo === '4');
+                    
+                    document.getElementById('sarahResult').innerHTML = `
+                        <p class="success">✅ Sarah's tasks fetched!</p>
+                        <p><strong>Total tasks:</strong> ${data.data.length}</p>
+                        <p><strong>Sarah's tasks:</strong> ${sarahTasks.length}</p>
+                        <h3>Sarah's Tasks:</h3>
+                        <pre>${JSON.stringify(sarahTasks, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('sarahResult').innerHTML = `
+                        <p class="error">❌ Failed to fetch tasks: ${data.message}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('sarahResult').innerHTML = `
+                    <p class="error">❌ Error: ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 

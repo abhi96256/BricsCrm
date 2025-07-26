@@ -326,6 +326,17 @@
   font-size: 0.8rem;
 }
 
+.action-btn.danger {
+  background: #dc3545;
+  color: #ffffff;
+  border-color: #dc3545;
+}
+
+.action-btn.danger:hover {
+  background: #c82333;
+  border-color: #bd2130;
+}
+
 /* Status Badges */
 .status-badge {
   padding: 0.25rem 0.75rem;
