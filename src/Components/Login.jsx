@@ -28,7 +28,7 @@ const Login = ({ onLoginSuccess }) => {
         renderer: 'svg',
         loop: true,
         autoplay: true,
-        path: '/src/assets/CRMD.json'
+        path: '/src/public/CRMD.json'
       });
 
       return () => anim.destroy();
