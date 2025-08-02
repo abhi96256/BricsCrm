@@ -109,7 +109,7 @@ const Login = ({ onLoginSuccess }) => {
       <div className="login-form-panel">
         <div className="form-content">
           <div className="logo-section">
-            <div className="logo">Crextio</div>
+            <div className="logo">CRM</div>
           </div>
           
           <h1 className="main-heading">
@@ -277,7 +277,7 @@ const Login = ({ onLoginSuccess }) => {
           {/* Additional content to make page scrollable */}
           <div className="additional-content">
             <div className="features-section">
-              <h2>Why Choose Crextio?</h2>
+              <h2>Why Choose CRM?</h2>
               <div className="features-grid">
                 <div className="feature-card">
                   <div className="feature-icon">🚀</div>
@@ -306,7 +306,7 @@ const Login = ({ onLoginSuccess }) => {
               <h2>What Our Users Say</h2>
               <div className="testimonials-grid">
                 <div className="testimonial-card">
-                  <p>"Crextio has transformed how we manage our customer relationships. Highly recommended!"</p>
+                  <p>"CRm has transformed how we manage our customer relationships. Highly recommended!"</p>
                   <div className="testimonial-author">
                     <strong>Sarah Johnson</strong>
                     <span>Marketing Manager</span>

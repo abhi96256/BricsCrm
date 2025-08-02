@@ -119,7 +119,7 @@ function App() {
               <div className="user-avatar">
                 <span>{currentUser?.name?.charAt(0) || 'U'}</span>
               </div>
-              <div className="logo">Kommo</div>
+              <div className="logo">CRM</div>
             </div>
             
             <div className="search-bar">

@@ -378,6 +378,7 @@ select.form-input option:hover {
 /* Features section */
 .features-section {
   margin-bottom: 4rem;
+  display: none;
 }
 
 .features-grid {
@@ -421,6 +422,7 @@ select.form-input option:hover {
 /* Testimonials section */
 .testimonials-section {
   margin-bottom: 4rem;
+  display: none;
 }
 
 .testimonials-grid {
@@ -465,6 +467,7 @@ select.form-input option:hover {
 /* Pricing section */
 .pricing-section {
   margin-bottom: 2rem;
+  display: none;
 }
 
 .pricing-grid {
@@ -544,7 +547,7 @@ select.form-input option:hover {
   padding: 2rem;
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 144vh;
   animation: slideInRight 0.8s ease-out;
 }
 
@@ -568,6 +571,8 @@ select.form-input option:hover {
   align-items: center;
   justify-content: center;
   animation: fadeIn 1s ease-out 1s both;
+  transform: translate3d(0px, 0px, 0px);
+  content-visibility: visible;
 }
 
 @keyframes fadeIn {
