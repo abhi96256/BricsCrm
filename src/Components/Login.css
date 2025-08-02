@@ -197,6 +197,45 @@ body {
   75% { transform: translateX(5px); }
 }
 
+/* Password input container */
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container .form-input {
+  padding-right: 3rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: #718096;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle-btn:hover {
+  color: #4299e1;
+  background: rgba(66, 153, 225, 0.1);
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  color: #4299e1;
+  background: rgba(66, 153, 225, 0.1);
+}
+
 /* Dropdown specific styling */
 .form-input[type="select"],
 select.form-input {
