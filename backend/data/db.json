@@ -80,15 +80,15 @@
       ],
       "deadline": "2025-08-02T12:22:16.345Z",
       "priority": "High",
-      "status": "In Progress",
-      "progress": 48,
+      "status": "Completed",
+      "progress": 100,
       "machine": "1",
       "category": "Maintenance",
       "attachments": [],
       "comments": [],
       "createdBy": "1",
       "createdAt": "2025-07-26T12:22:16.345Z",
-      "updatedAt": "2025-07-26T17:16:55.264Z"
+      "updatedAt": "2025-08-15T16:46:37.759Z"
     },
     {
       "id": "2",
@@ -269,14 +269,14 @@
       "deadline": "2025-07-31",
       "priority": "Medium",
       "status": "Pending",
-      "progress": 0,
+      "progress": null,
       "machine": "1",
       "category": "General",
       "attachments": [],
       "comments": [],
       "createdBy": "1",
       "createdAt": "2025-07-26T17:02:53.850Z",
-      "updatedAt": "2025-07-26T17:02:53.850Z"
+      "updatedAt": "2025-08-15T16:34:20.798Z"
     },
     {
       "id": "e17f2fac-1e51-48ff-8fbd-0153676bec6d",

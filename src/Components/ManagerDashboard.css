@@ -483,7 +483,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 0;
-  max-width: 500px;
+  max-width: 600px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
@@ -536,7 +536,7 @@
 }
 
 .form-group label {
-  color: black;
+  color: #ffffff;
   font-weight: 500;
   font-size: 0.9rem;
 }
@@ -548,10 +548,9 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  color: black;
+  color: #ffffff;
   font-size: 0.9rem;
   transition: all 0.3s ease;
-  color: black;
 }
 
 .form-group input:focus,
@@ -574,6 +573,88 @@
 .form-group textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+/* Maintenance Log Specific Styles */
+.maintenance-history {
+  margin-bottom: 2rem;
+}
+
+.maintenance-history h4 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.maintenance-logs-container {
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.maintenance-log-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.maintenance-log-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+
+.maintenance-log-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.maintenance-log-type {
+  color: #ffc107;
+  font-weight: bold;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 193, 7, 0.1);
+  border-radius: 12px;
+}
+
+.maintenance-log-date {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+}
+
+.maintenance-log-description {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.maintenance-log-technician {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.no-logs-message {
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.add-maintenance-section h4 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
 }
 
 .modal-actions {

@@ -40,6 +40,24 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
     priority: 'Medium',
     description: ''
   });
+  const [editMachineData, setEditMachineData] = useState({
+    name: '',
+    location: '',
+    status: 'Operational'
+  });
+  const [maintenanceLogData, setMaintenanceLogData] = useState({
+    type: 'Routine',
+    description: '',
+    technician: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+  const [newMachineData, setNewMachineData] = useState({
+    name: '',
+    location: '',
+    status: 'Operational'
+  });
+  const [selectedMachine, setSelectedMachine] = useState(null);
+  const [maintenanceLogs, setMaintenanceLogs] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [machines, setMachines] = useState([]);
@@ -105,7 +123,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
     setActiveFilter(filter);
   };
 
-  const openModal = (type, task = null, employee = null) => {
+  const openModal = (type, task = null, employee = null, machine = null) => {
     setModalType(type);
     setShowModal(true);
     if (task) {
@@ -114,6 +132,19 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
     if (employee) {
       setSelectedEmployee(employee);
     }
+    if (machine) {
+      setSelectedMachine(machine);
+      if (type === 'editMachine') {
+        setEditMachineData({
+          name: machine.name,
+          location: machine.location,
+          status: machine.status
+        });
+      }
+      if (type === 'maintenanceLog') {
+        fetchMaintenanceLogs(machine.id);
+      }
+    }
   };
 
   const closeModal = () => {
@@ -121,6 +152,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
     setModalType('');
     setSelectedTask(null);
     setSelectedEmployee(null);
+    setSelectedMachine(null);
     setReassignData({ newEmployee: '', notes: '' });
     setNewTaskData({
       title: '',
@@ -129,6 +161,22 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
       deadline: '',
       priority: 'Medium',
       description: ''
+    });
+    setEditMachineData({
+      name: '',
+      location: '',
+      status: 'Operational'
+    });
+    setMaintenanceLogData({
+      type: 'Routine',
+      description: '',
+      technician: '',
+      date: new Date().toISOString().split('T')[0]
+    });
+    setNewMachineData({
+      name: '',
+      location: '',
+      status: 'Operational'
     });
   };
 
@@ -218,6 +266,112 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
       }
     } catch (error) {
       alert('Error creating task.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateMachine = async () => {
+    if (!selectedMachine || !editMachineData.name || !editMachineData.location) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/machines/${selectedMachine.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: editMachineData.name,
+          location: editMachineData.location,
+          status: editMachineData.status
+        })
+      });
+      if (response.ok) {
+        await fetchMachines();
+        closeModal();
+        alert('Machine updated successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      alert('Error updating machine.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddMaintenanceLog = async () => {
+    if (!selectedMachine || !maintenanceLogData.description || !maintenanceLogData.technician) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/machines/${selectedMachine.id}/maintenance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: maintenanceLogData.type,
+          description: maintenanceLogData.description,
+          technician: maintenanceLogData.technician,
+          date: maintenanceLogData.date
+        })
+      });
+      if (response.ok) {
+        closeModal();
+        alert('Maintenance log added successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      alert('Error adding maintenance log.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMaintenanceLogs = async (machineId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/machines/${machineId}/maintenance`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMaintenanceLogs(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching maintenance logs:', error);
+    }
+  };
+
+  const handleAddMachine = async () => {
+    if (!newMachineData.name || !newMachineData.location) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/machines`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: newMachineData.name,
+          location: newMachineData.location,
+          status: newMachineData.status
+        })
+      });
+      if (response.ok) {
+        await fetchMachines();
+        closeModal();
+        alert('Machine added successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      alert('Error adding machine.');
     } finally {
       setLoading(false);
     }
@@ -523,8 +677,8 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
               <span><strong>Next Maintenance:</strong> 2024-02-15</span>
             </div>
             <div className="machine-actions">
-              <button className="action-btn small">Edit</button>
-              <button className="action-btn small">Maintenance Log</button>
+              <button className="action-btn small" onClick={() => openModal('editMachine', null, null, machine)}>Edit</button>
+              <button className="action-btn small" onClick={() => openModal('maintenanceLog', null, null, machine)}>Maintenance Log</button>
             </div>
           </div>
         ))}
@@ -546,6 +700,8 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
               {modalType === 'viewProfile' && 'Employee Profile'}
               {modalType === 'assignTask' && 'Assign New Task'}
               {modalType === 'viewTaskDetails' && 'Task Details'}
+              {modalType === 'editMachine' && 'Edit Machine'}
+              {modalType === 'maintenanceLog' && 'Maintenance Log'}
             </h2>
             <button className="close-btn" onClick={closeModal}>×</button>
           </div>
@@ -583,18 +739,36 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
             {modalType === 'addMachine' && (
               <div className="form-group">
                 <label>Machine Name</label>
-                <input type="text" placeholder="Enter machine name" />
+                <input 
+                  type="text" 
+                  name="name"
+                  value={newMachineData.name}
+                  onChange={e => setNewMachineData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter machine name" 
+                />
                 <label>Location</label>
-                <input type="text" placeholder="Enter location" />
+                <input 
+                  type="text" 
+                  name="location"
+                  value={newMachineData.location}
+                  onChange={e => setNewMachineData(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="Enter location" 
+                />
                 <label>Status</label>
-                <select>
+                <select 
+                  name="status"
+                  value={newMachineData.status}
+                  onChange={e => setNewMachineData(prev => ({ ...prev, status: e.target.value }))}
+                >
                   <option value="Operational">Operational</option>
                   <option value="Maintenance">Maintenance</option>
                   <option value="Offline">Offline</option>
                 </select>
                 <div className="modal-actions">
                   <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
-                  <button className="action-btn primary">Add Machine</button>
+                  <button className="action-btn primary" onClick={handleAddMachine} disabled={loading}>
+                    {loading ? 'Adding...' : 'Add Machine'}
+                  </button>
                 </div>
               </div>
             )}
@@ -759,6 +933,114 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 </div>
               </div>
             )}
+            {modalType === 'editMachine' && selectedMachine && (
+              <div className="form-group">
+                <label>Machine Name</label>
+                <input 
+                  type="text" 
+                  name="name"
+                  value={editMachineData.name}
+                  onChange={e => setEditMachineData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter machine name" 
+                />
+                <label>Location</label>
+                <input 
+                  type="text" 
+                  name="location"
+                  value={editMachineData.location}
+                  onChange={e => setEditMachineData(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="Enter location" 
+                />
+                <label>Status</label>
+                <select 
+                  name="status"
+                  value={editMachineData.status}
+                  onChange={e => setEditMachineData(prev => ({ ...prev, status: e.target.value }))}
+                >
+                  <option value="Operational">Operational</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Offline">Offline</option>
+                </select>
+                                 <div className="modal-actions">
+                   <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
+                   <button className="action-btn primary" onClick={handleUpdateMachine} disabled={loading}>
+                     {loading ? 'Saving...' : 'Save Changes'}
+                   </button>
+                 </div>
+              </div>
+            )}
+                         {modalType === 'maintenanceLog' && selectedMachine && (
+               <div className="form-group">
+                 <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Machine: {selectedMachine.name}</h3>
+                 
+                 {/* Existing Maintenance Logs */}
+                 <div className="maintenance-history">
+                   <h4>Maintenance History</h4>
+                   {maintenanceLogs.length > 0 ? (
+                     <div className="maintenance-logs-container">
+                       {maintenanceLogs.map((log, index) => (
+                         <div key={index} className="maintenance-log-item">
+                           <div className="maintenance-log-header">
+                             <span className="maintenance-log-type">{log.type}</span>
+                             <span className="maintenance-log-date">{log.date}</span>
+                           </div>
+                           <div className="maintenance-log-description">{log.description}</div>
+                           <div className="maintenance-log-technician">Technician: {log.technician}</div>
+                         </div>
+                       ))}
+                     </div>
+                   ) : (
+                     <div className="no-logs-message">
+                       No maintenance logs found
+                     </div>
+                   )}
+                 </div>
+
+                 {/* Add New Maintenance Log */}
+                 <div className="add-maintenance-section">
+                   <h4>Add New Maintenance Log</h4>
+                 <label>Type</label>
+                 <select 
+                   name="type"
+                   value={maintenanceLogData.type}
+                   onChange={e => setMaintenanceLogData(prev => ({ ...prev, type: e.target.value }))}
+                 >
+                   <option value="Routine">Routine</option>
+                   <option value="Emergency">Emergency</option>
+                   <option value="Preventive">Preventive</option>
+                 </select>
+                 <label>Description</label>
+                 <textarea 
+                   name="description"
+                   value={maintenanceLogData.description}
+                   onChange={e => setMaintenanceLogData(prev => ({ ...prev, description: e.target.value }))}
+                   placeholder="Enter maintenance description"
+                   rows="3"
+                 />
+                 <label>Technician</label>
+                 <input 
+                   type="text" 
+                   name="technician"
+                   value={maintenanceLogData.technician}
+                   onChange={e => setMaintenanceLogData(prev => ({ ...prev, technician: e.target.value }))}
+                   placeholder="Enter technician name" 
+                 />
+                 <label>Date</label>
+                 <input 
+                   type="date" 
+                   name="date"
+                   value={maintenanceLogData.date}
+                   onChange={e => setMaintenanceLogData(prev => ({ ...prev, date: e.target.value }))}
+                 />
+                 <div className="modal-actions">
+                   <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
+                   <button className="action-btn primary" onClick={handleAddMaintenanceLog} disabled={loading}>
+                     {loading ? 'Adding...' : 'Add Log'}
+                   </button>
+                 </div>
+               </div>
+             </div>
+             )}
           </div>
         </div>
       </div>
