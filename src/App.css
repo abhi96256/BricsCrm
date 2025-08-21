@@ -10,7 +10,7 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #333333;
   overflow-x: hidden;
-  font-size: 14px; /* Reduced base font size */
+  font-size: var(--font-size-sm); /* Use typography system */
 }
 
 /* App Container */
@@ -62,7 +62,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem; /* Reduced font size */
+  font-size: var(--font-size-lg); /* Use typography system */
   font-weight: 700;
   color: #ffffff;
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); /* Reduced shadow */
@@ -93,7 +93,7 @@ body {
 }
 
 .logo {
-  font-size: 1.5rem; /* Reduced font size */
+  font-size: var(--font-size-2xl); /* Use typography system - 1.5rem */
   font-weight: 800;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
@@ -154,7 +154,7 @@ body {
   background: transparent;
   border: none;
   color: #2d3748;
-  font-size: 0.9rem; /* Reduced font size */
+  font-size: var(--font-size-sm); /* Use typography system */
   width: 100%;
   outline: none;
   font-weight: 500;
@@ -182,7 +182,7 @@ body {
   gap: 0.4rem; /* Reduced gap */
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 0.8rem; /* Reduced font size */
+  font-size: var(--font-size-xs); /* Use typography system */
   font-weight: 600;
   box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3); /* Reduced shadow */
   position: relative;
@@ -217,7 +217,7 @@ body {
   border-radius: 20px; /* Reduced border radius */
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 0.8rem; /* Reduced font size */
+  font-size: var(--font-size-xs); /* Use typography system */
   font-weight: 600;
   box-shadow: 0 3px 12px rgba(255, 107, 107, 0.3); /* Reduced shadow */
   position: relative;
@@ -343,14 +343,14 @@ body {
 }
 
 .sidebar-item span {
-  font-size: 0.85rem; /* Reduced font size */
+  font-size: var(--font-size-sm); /* Use typography system */
   font-weight: 600;
 }
 
 .notification-badge {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: #ffffff;
-  font-size: 0.65rem; /* Reduced font size */
+  font-size: var(--font-size-xs); /* Use typography system */
   font-weight: 700;
   padding: 0.25rem 0.5rem; /* Reduced padding */
   border-radius: 10px; /* Reduced border radius */
@@ -408,7 +408,7 @@ body {
 }
 
 .user-info h1 {
-  font-size: 2.5rem; /* Reduced font size */
+  font-size: var(--font-size-2xl); /* Use typography system - 1.5rem */
   font-weight: 800;
   background: black;
   -webkit-background-clip: text;
@@ -444,7 +444,7 @@ body {
   border-radius: 20px; /* Reduced border radius */
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 0.8rem; /* Reduced font size */
+  font-size: var(--font-size-xs); /* Use typography system */
   font-weight: 600;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1); /* Reduced shadow */
   backdrop-filter: blur(10px);
@@ -475,7 +475,7 @@ body {
   border-radius: 20px; /* Reduced border radius */
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 0.8rem; /* Reduced font size */
+  font-size: var(--font-size-xs); /* Use typography system */
   font-weight: 600;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1); /* Reduced shadow */
   backdrop-filter: blur(10px);
@@ -547,7 +547,7 @@ body {
 }
 
 .widget h3 {
-  font-size: 0.9rem; /* Reduced font size */
+  font-size: var(--font-size-sm); /* Use typography system */
   font-weight: 700;
   color: #2d3748;
   margin-bottom: 1.25rem; /* Reduced margin */
@@ -574,7 +574,7 @@ body {
 }
 
 .main-number {
-  font-size: 2.5rem; /* Reduced font size */
+  font-size: var(--font-size-4xl); /* Use typography system */
   font-weight: 800;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
@@ -585,7 +585,7 @@ body {
 }
 
 .period {
-  font-size: 0.8rem; /* Reduced font size */
+  font-size: var(--font-size-xs); /* Use typography system */
   color: #718096;
   font-weight: 600;
   text-transform: uppercase;
@@ -600,7 +600,7 @@ body {
 }
 
 .sub-category {
-  font-size: 0.8rem; /* Reduced font size */
+  font-size: var(--font-size-xs); /* Use typography system */
   color: #4a5568;
   padding: 0.4rem 0; /* Reduced padding */
   border-bottom: 1px solid rgba(102, 126, 234, 0.1);
@@ -646,7 +646,7 @@ body {
 }
 
 .no-data p {
-  font-size: 1rem; /* Reduced font size */
+  font-size: var(--font-size-base); /* Use typography system */
   margin-bottom: 1.25rem; /* Reduced margin */
   font-weight: 600;
   color: #2d3748;
@@ -760,7 +760,7 @@ body {
   }
   
   .user-info h1 {
-    font-size: 1.75rem; /* Reduced font size */
+    font-size: 1.15rem; /* Reduced font size */
   }
   
   .dashboard-widgets {
