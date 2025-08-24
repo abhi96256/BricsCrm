@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import api from '../api'; // Import the centralized API service
 import './EmployeeDashboard.css';
-
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [activeFilter, setActiveFilter] = useState('week');
@@ -18,7 +17,16 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
   });
   const [tasks, setTasks] = useState([]);
   const [machines, setMachines] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    tasks: false,
+    machines: false,
+    action: false
+  });
+  const [error, setError] = useState({
+    tasks: null,
+    machines: null,
+    action: null
+  });
   const [progressValue, setProgressValue] = useState(0);
 
   // Fetch all data on mount
@@ -28,48 +36,32 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
   }, []);
 
   const fetchTasks = async () => {
+    setLoading(prev => ({ ...prev, tasks: true }));
+    setError(prev => ({ ...prev, tasks: null }));
     try {
-      // Use backend filtering for Employee role
-      if (currentUser && currentUser.role === 'Employee' && currentUser.id) {
-        const response = await fetch(`${API_BASE_URL}/tasks/filter/${currentUser.id}`, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setTasks(data.data);
-        }
-      } else {
-        // Fallback to frontend filtering
-        const response = await fetch(`${API_BASE_URL}/tasks`, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setTasks(data.data);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
+      let response;
+      // The backend should handle filtering based on the authenticated user's role and ID
+      response = await api.get('/tasks');
+      setTasks(response.data.data);
+    } catch (err) {
+      setError(prev => ({ ...prev, tasks: 'Failed to fetch tasks.' }));
+      console.error('Error fetching tasks:', err);
+    } finally {
+      setLoading(prev => ({ ...prev, tasks: false }));
     }
   };
 
   const fetchMachines = async () => {
+    setLoading(prev => ({ ...prev, machines: true }));
+    setError(prev => ({ ...prev, machines: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMachines(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching machines:', error);
+      const response = await api.get('/machines');
+      setMachines(response.data.data);
+    } catch (err) {
+      setError(prev => ({ ...prev, machines: 'Failed to fetch machines.' }));
+      console.error('Error fetching machines:', err);
+    } finally {
+      setLoading(prev => ({ ...prev, machines: false }));
     }
   };
 
@@ -122,106 +114,67 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
   };
 
   const handleUpdateStatus = async (taskId, newStatus) => {
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
+    setError(prev => ({ ...prev, action: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      if (response.ok) {
-        await fetchTasks();
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
-    } catch (error) {
+      await api.put(`/tasks/${taskId}`, { status: newStatus });
+      await fetchTasks();
+    } catch (err) {
+      setError(prev => ({ ...prev, action: 'Error updating task status.' }));
       alert('Error updating task status.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
   const handleUpdateProgress = async (taskId, newProgress) => {
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
+    setError(prev => ({ ...prev, action: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/progress`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ progress: newProgress })
-      });
-      if (response.ok) {
-        await fetchTasks();
-        if (selectedTask) {
-          closeModal();
-          alert('Progress updated successfully!');
-        }
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
-    } catch (error) {
+      await api.put(`/tasks/${taskId}/progress`, { progress: newProgress });
+      await fetchTasks();
+      closeModal();
+      alert('Progress updated successfully!');
+    } catch (err) {
+      setError(prev => ({ ...prev, action: 'Error updating task progress.' }));
       alert('Error updating task progress.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
   const handleSaveNotes = async () => {
     if (!selectedTask) return;
-    
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
+    setError(prev => ({ ...prev, action: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks/${selectedTask.id}/comment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ comment: taskNotes })
-      });
-      if (response.ok) {
-        await fetchTasks();
-        closeModal();
-        alert('Notes saved successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
-    } catch (error) {
+      await api.post(`/tasks/${selectedTask._id}/comment`, { comment: taskNotes });
+      await fetchTasks();
+      closeModal();
+      alert('Notes saved successfully!');
+    } catch (err) {
+      setError(prev => ({ ...prev, action: 'Error saving notes.' }));
       alert('Error saving notes.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
   const handleCompleteTask = async (taskId) => {
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
+    setError(prev => ({ ...prev, action: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          status: 'Completed', 
-          progress: 100 
-        })
+      await api.put(`/tasks/${taskId}`, { 
+        status: 'Completed', 
+        progress: 100 
       });
-      if (response.ok) {
-        await fetchTasks();
-        alert('Task completed successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
-    } catch (error) {
+      await fetchTasks();
+      alert('Task completed successfully!');
+    } catch (err) {
+      setError(prev => ({ ...prev, action: 'Error completing task.' }));
       alert('Error completing task.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -231,37 +184,26 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
       return;
     }
     
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
       // Create a new task for the issue report
-      const response = await fetch(`${API_BASE_URL}/tasks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          title: `Issue Report: ${issueReport.title}`,
-          description: `Machine: ${selectedMachine.name}\nCategory: ${issueReport.category}\nPriority: ${issueReport.priority}\n\nIssue Description:\n${issueReport.description}`,
-          assignedTo: '3', // Assign to Manager (John)
-          machine: selectedMachine.id,
-          deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
-          priority: issueReport.priority,
-          category: 'Issue Report'
-        })
+      await api.post('/tasks', {
+        title: `Issue Report: ${issueReport.title}`,
+        description: `Machine: ${selectedMachine.name}\nCategory: ${issueReport.category}\nPriority: ${issueReport.priority}\n\nIssue Description:\n${issueReport.description}`,
+        // This should ideally be a dynamic assignment to a manager
+        assignedTo: currentUser._id, // Temporarily assign to self, manager will reassign
+        machine: selectedMachine._id,
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+        priority: issueReport.priority,
+        category: 'Issue Report'
       });
-      
-      if (response.ok) {
-        closeModal();
-        alert('Issue reported successfully! It has been assigned to a manager for review.');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error('Error reporting issue:', error);
+      closeModal();
+      alert('Issue reported successfully! It has been assigned to a manager for review.');
+    } catch (err) {
+      setError(prev => ({ ...prev, action: 'Error reporting issue.' }));
       alert('Error reporting issue. Please try again.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -367,15 +309,19 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
     </div>
   );
 
-  const renderTaskAccess = () => (
-    <div className="task-access-content">
-      <div className="content-header">
-        <h1>My Tasks</h1>
-      </div>
+  const renderTaskAccess = () => {
+    if (loading.tasks) return <div className="loading-indicator">Loading tasks...</div>;
+    if (error.tasks) return <div className="error-message">{error.tasks}</div>;
 
-      <div className="tasks-grid">
-        {tasks.map(task => (
-          <div key={task.id} className="task-card">
+    return (
+      <div className="task-access-content">
+        <div className="content-header">
+          <h1>My Tasks</h1>
+        </div>
+
+        <div className="tasks-grid">
+          {tasks.map(task => (
+            <div key={task._id} className="task-card">
             <div className="task-header">
               <h3>{task.title}</h3>
               <span className={`priority-badge ${task.priority.toLowerCase()}`}>
@@ -384,7 +330,7 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
             </div>
             <div className="task-details">
               <div className="task-info">
-                <span><strong>Assigned by:</strong> {task.assignedBy}</span>
+                <span><strong>Assigned by:</strong> {task.assignedBy?.name || 'N/A'}</span>
                 <span><strong>Machine:</strong> {task.machine ? (typeof task.machine === 'string' ? task.machine : task.machine.name) : 'Not assigned'}</span>
                 <span><strong>Deadline:</strong> {task.deadline}</span>
                 <span><strong>Status:</strong> {task.status}</span>
@@ -432,10 +378,10 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
               {task.status !== 'Completed' && (
                 <button 
                   className="action-btn small success" 
-                  onClick={() => handleCompleteTask(task.id)}
-                  disabled={loading}
+                  onClick={() => handleCompleteTask(task._id)}
+                  disabled={loading.action}
                 >
-                  {loading ? 'Completing...' : 'Mark Complete'}
+                  {loading.action ? 'Completing...' : 'Mark Complete'}
                 </button>
               )}
             </div>
@@ -444,16 +390,21 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
       </div>
     </div>
   );
+};
 
-  const renderMachineInfo = () => (
-    <div className="machine-info-content">
-      <div className="content-header">
-        <h1>Machine Information</h1>
-      </div>
+  const renderMachineInfo = () => {
+    if (loading.machines) return <div className="loading-indicator">Loading machines...</div>;
+    if (error.machines) return <div className="error-message">{error.machines}</div>;
 
-      <div className="machines-grid">
-        {machines.map(machine => (
-          <div key={machine.id} className="machine-card">
+    return (
+      <div className="machine-info-content">
+        <div className="content-header">
+          <h1>Machine Information</h1>
+        </div>
+
+        <div className="machines-grid">
+          {machines.map(machine => (
+            <div key={machine._id} className="machine-card">
             <div className="machine-header">
               <h3>{machine.name}</h3>
               <span className={`status-badge ${machine.status.toLowerCase()}`}>
@@ -481,9 +432,10 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
             </div>
           </div>
         ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderModal = () => {
     if (!showModal) return null;
@@ -546,15 +498,15 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
                   rows="5"
                 />
                 <div className="modal-actions">
-                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading.action}>
                     Cancel
                   </button>
                   <button 
                     className="action-btn primary" 
                     onClick={handleSaveNotes}
-                    disabled={loading}
+                    disabled={loading.action}
                   >
-                    {loading ? 'Saving...' : 'Save Notes'}
+                    {loading.action ? 'Saving...' : 'Save Notes'}
                   </button>
                 </div>
               </div>
@@ -687,15 +639,15 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
                 </div>
                 
                 <div className="modal-actions">
-                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading.action}>
                     Cancel
                   </button>
                   <button 
                     className="action-btn primary" 
-                    onClick={() => handleUpdateProgress(selectedTask.id, progressValue)}
-                    disabled={loading}
+                    onClick={() => handleUpdateProgress(selectedTask._id, progressValue)}
+                    disabled={loading.action}
                   >
-                    {loading ? 'Updating...' : 'Update Progress'}
+                    {loading.action ? 'Updating...' : 'Update Progress'}
                   </button>
                 </div>
               </div>
@@ -748,15 +700,15 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
                 />
                 
                 <div className="modal-actions">
-                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading.action}>
                     Cancel
                   </button>
                   <button 
                     className="action-btn warning" 
                     onClick={handleReportIssue}
-                    disabled={loading}
+                    disabled={loading.action}
                   >
-                    {loading ? 'Reporting...' : 'Report Issue'}
+                    {loading.action ? 'Reporting...' : 'Report Issue'}
                   </button>
                 </div>
               </div>

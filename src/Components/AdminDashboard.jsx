@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../api';
 import './AdminDashboard.css';
 
 const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
@@ -8,31 +9,71 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [error, setError] = useState('');
+    const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Mock data for demonstration
-  const dashboardData = {
-    week: {
-      totalTasks: 156,
-      completedTasks: 142,
-      activeUsers: 89,
-      machineUptime: 94.2
-    },
-    month: {
-      totalTasks: 623,
-      completedTasks: 598,
-      activeUsers: 92,
-      machineUptime: 96.8
-    },
-    year: {
-      totalTasks: 7489,
-      completedTasks: 7321,
-      activeUsers: 95,
-      machineUptime: 98.1
-    }
-  };
+  // Data states
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const [newTaskData, setNewTaskData] = useState({ title: '', description: '', priority: 'medium', deadline: '', assignedTo: '', machine: '' });
+  const [newMachineData, setNewMachineData] = useState({ name: '', model: '', serialNumber: '', location: '', manufacturer: '', department: '' });
 
-  const currentData = dashboardData[activeFilter];
+
+    useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        let response;
+        switch (activeTab) {
+          case 'dashboard':
+            response = await api.get(`/analytics/dashboard?period=${activeFilter}`);
+            setDashboardStats(response.data.data);
+            break;
+          case 'users':
+            response = await api.get('/users');
+            setUsers(response.data.data);
+            break;
+          case 'tasks':
+            response = await api.get('/tasks');
+            setTasks(response.data.data);
+            break;
+          case 'machines':
+            response = await api.get('/machines');
+            setMachines(response.data.data);
+            break;
+          default:
+            break;
+        }
+      } catch (err) {
+        setError(`Failed to fetch ${activeTab} data.`);
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [activeTab, activeFilter]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [usersResponse, machinesResponse] = await Promise.all([
+          api.get('/users'),
+          api.get('/machines')
+        ]);
+        setUsers(usersResponse.data.data);
+        setMachines(machinesResponse.data.data);
+      } catch (err) {
+        setError('Failed to fetch initial data.');
+        console.error(err);
+      }
+    };
+    fetchInitialData();
+  }, []);
 
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
@@ -55,6 +96,28 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     setSelectedMachine(null);
     setSelectedUser(null);
     setError('');
+  };
+
+  const handleCreateTask = async () => {
+    try {
+      const response = await api.post('/tasks', { ...newTaskData, createdBy: currentUser.id });
+      setTasks([...tasks, response.data.data]);
+      closeModal();
+    } catch (err) {
+      setError('Failed to create task.');
+      console.error(err);
+    }
+  };
+
+  const handleCreateMachine = async () => {
+    try {
+      const response = await api.post('/machines', newMachineData);
+      setMachines([...machines, response.data.data]);
+      closeModal();
+    } catch (err) {
+      setError('Failed to create machine.');
+      console.error(err);
+    }
   };
 
   const renderDashboardContent = () => (
@@ -97,7 +160,7 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         <div className="widget">
           <h3>Total Tasks</h3>
           <div className="widget-content">
-            <div className="main-number">{currentData.totalTasks}</div>
+                        <div className="main-number">{dashboardStats?.totalTasks || 0}</div>
             <div className="period">Tasks in {activeFilter}</div>
             <div className="sub-categories">
               <div className="sub-category">High Priority: 23</div>
@@ -110,12 +173,12 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         <div className="widget">
           <h3>Completed Tasks</h3>
           <div className="widget-content">
-            <div className="main-number">{currentData.completedTasks}</div>
+                        <div className="main-number">{dashboardStats?.completedTasks || 0}</div>
             <div className="period">Completed in {activeFilter}</div>
             <div className="progress-bar">
               <div 
                 className="progress-fill" 
-                style={{ width: `${(currentData.completedTasks / currentData.totalTasks) * 100}%` }}
+                                style={{ width: `${(dashboardStats?.completedTasks / dashboardStats?.totalTasks) * 100 || 0}%` }}
               ></div>
             </div>
             <div className="sub-categories">
@@ -128,7 +191,7 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         <div className="widget">
           <h3>Active Users</h3>
           <div className="widget-content">
-            <div className="main-number">{currentData.activeUsers}</div>
+                        <div className="main-number">{dashboardStats?.activeUsers || 0}</div>
             <div className="period">Currently Online</div>
             <div className="sub-categories">
               <div className="sub-category">Managers: 12</div>
@@ -140,12 +203,12 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         <div className="widget">
           <h3>Machine Uptime</h3>
           <div className="widget-content">
-            <div className="main-number">{currentData.machineUptime}%</div>
+                        <div className="main-number">{dashboardStats?.machineUptime || 0}%</div>
             <div className="period">Average Uptime</div>
             <div className="progress-bar">
               <div 
                 className="progress-fill" 
-                style={{ width: `${currentData.machineUptime}%` }}
+                                style={{ width: `${dashboardStats?.machineUptime || 0}%` }}
               ></div>
             </div>
             <div className="sub-categories">
@@ -264,85 +327,26 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
           <div>Actions</div>
         </div>
         
-        <div className="table-row">
-          <div className="table-cell">
-            <input
-              type="text"
-              className="user-name-input"
-              defaultValue="John Smith"
-              placeholder="Enter name"
-            />
-          </div>
-          <div className="table-cell">
-            <select className="role-select">
-              <option value="manager">Manager</option>
-              <option value="employee">Employee</option>
-              <option value="admin">Admin</option>
-              <option value="sub-admin">Sub-Admin</option>
-            </select>
-          </div>
-          <div className="table-cell">
-            <input
-              type="email"
-              className="user-email-input"
-              defaultValue="john.smith@company.com"
-              placeholder="Enter email"
-            />
-          </div>
-          <div className="table-cell">
-            <span className="status-badge active">Active</span>
-          </div>
-          <div className="table-cell">
-            <div className="action-buttons">
-              <button className="action-btn primary small" onClick={() => openModal('user', { name: 'John Smith' })}>
-                View
-              </button>
-              <button className="action-btn secondary small">
-                Edit
-              </button>
+        {loading ? <div>Loading users...</div> : users.map(user => (
+          <div className="table-row" key={user.id}>
+            <div className="table-cell">{user.name}</div>
+            <div className="table-cell">{user.role}</div>
+            <div className="table-cell">{user.email}</div>
+            <div className="table-cell">
+              <span className={`status-badge ${user.status === 'active' ? 'active' : ''}`}>{user.status}</span>
+            </div>
+            <div className="table-cell">
+              <div className="action-buttons">
+                <button className="action-btn primary small" onClick={() => openModal('user', user)}>
+                  View
+                </button>
+                <button className="action-btn secondary small">
+                  Edit
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="table-row">
-          <div className="table-cell">
-            <input
-              type="text"
-              className="user-name-input"
-              defaultValue="Sarah Johnson"
-              placeholder="Enter name"
-            />
-          </div>
-          <div className="table-cell">
-            <select className="role-select">
-              <option value="manager">Manager</option>
-              <option value="employee">Employee</option>
-              <option value="admin">Admin</option>
-              <option value="sub-admin">Sub-Admin</option>
-            </select>
-          </div>
-          <div className="table-cell">
-            <input
-              type="email"
-              className="user-email-input"
-              defaultValue="sarah.johnson@company.com"
-              placeholder="Enter email"
-            />
-          </div>
-          <div className="table-cell">
-            <span className="status-badge active">Active</span>
-          </div>
-          <div className="table-cell">
-            <div className="action-buttons">
-              <button className="action-btn primary small" onClick={() => openModal('user', { name: 'Sarah Johnson' })}>
-                View
-              </button>
-              <button className="action-btn secondary small">
-                Edit
-              </button>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -364,116 +368,48 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       </div>
 
       <div className="tasks-grid">
-        <div className="task-card">
-          <div className="task-header">
-            <h3>Production Line Maintenance</h3>
-            <div className="task-header-right">
-              <select className="status-select">
-                <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="pending">Pending</option>
-              </select>
-              <span className="priority-badge urgent">Urgent</span>
-            </div>
-          </div>
-          
-          <div className="task-details">
-            <div className="task-info">
-              <div><strong>Assigned to:</strong> John Smith, Mike Davis</div>
-              <div><strong>Machine:</strong> Production Line A</div>
-              <div><strong>Deadline:</strong> 2024-01-15</div>
-            </div>
-            
-            <div className="task-employees">
-              <span className="employee-tag">John Smith</span>
-              <span className="employee-tag">Mike Davis</span>
-            </div>
-            
-            <div className="task-progress">
-              <div className="progress-header">
-                <span>Progress</span>
-                <input
-                  type="number"
-                  className="progress-input"
-                  defaultValue="75"
-                  min="0"
-                  max="100"
-                />
-                <span>%</span>
-              </div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: '75%' }}></div>
+        {loading ? <div>Loading tasks...</div> : tasks.map(task => (
+          <div className="task-card" key={task.id}>
+            <div className="task-header">
+              <h3>{task.title}</h3>
+              <div className="task-header-right">
+                <select className="status-select" defaultValue={task.status}>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="pending">Pending</option>
+                </select>
+                <span className={`priority-badge ${task.priority?.toLowerCase()}`}>{task.priority}</span>
               </div>
             </div>
-          </div>
-          
-          <div className="task-actions">
-            <button className="action-btn primary" onClick={() => openModal('task', { name: 'Production Line Maintenance' })}>
-              View Details
-            </button>
-            <button className="action-btn secondary">
-              Edit Task
-            </button>
-            <button className="action-btn danger">
-              Delete
-            </button>
-          </div>
-        </div>
-
-        <div className="task-card">
-          <div className="task-header">
-            <h3>Quality Control Check</h3>
-            <div className="task-header-right">
-              <select className="status-select">
-                <option value="completed">Completed</option>
-                <option value="in-progress">In Progress</option>
-                <option value="pending">Pending</option>
-              </select>
-              <span className="priority-badge medium">Medium</span>
-            </div>
-          </div>
-          
-          <div className="task-details">
-            <div className="task-info">
-              <div><strong>Assigned to:</strong> Sarah Johnson</div>
-              <div><strong>Machine:</strong> Quality Control Unit</div>
-              <div><strong>Deadline:</strong> 2024-01-10</div>
-            </div>
-            
-            <div className="task-employees">
-              <span className="employee-tag">Sarah Johnson</span>
-            </div>
-            
-            <div className="task-progress">
-              <div className="progress-header">
-                <span>Progress</span>
-                <input
-                  type="number"
-                  className="progress-input"
-                  defaultValue="100"
-                  min="0"
-                  max="100"
-                />
-                <span>%</span>
+            <div className="task-details">
+              <div className="task-info">
+                <div><strong>Assigned to:</strong> {task.assignedUser?.name || 'N/A'}</div>
+                <div><strong>Machine:</strong> {task.machineDetails?.name || 'N/A'}</div>
+                <div><strong>Deadline:</strong> {new Date(task.deadline).toLocaleDateString()}</div>
               </div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: '100%' }}></div>
+              <div className="task-progress">
+                <div className="progress-header">
+                  <span>Progress</span>
+                  <span>{task.progress}%</span>
+                </div>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${task.progress}%` }}></div>
+                </div>
               </div>
             </div>
+            <div className="task-actions">
+              <button className="action-btn primary" onClick={() => openModal('task', task)}>
+                View Details
+              </button>
+              <button className="action-btn secondary">
+                Edit Task
+              </button>
+              <button className="action-btn danger">
+                Delete
+              </button>
+            </div>
           </div>
-          
-          <div className="task-actions">
-            <button className="action-btn primary" onClick={() => openModal('task', { name: 'Quality Control Check' })}>
-              View Details
-            </button>
-            <button className="action-btn secondary">
-              Edit Task
-            </button>
-            <button className="action-btn danger">
-              Delete
-            </button>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -495,81 +431,37 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       </div>
 
       <div className="machines-grid">
-        <div className="machine-card">
-          <div className="machine-header">
-            <h3>Production Line A</h3>
-            <div className="machine-header-right">
-              <select className="status-select">
-                <option value="operational">Operational</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="offline">Offline</option>
-              </select>
+        {loading ? <div>Loading machines...</div> : machines.map(machine => (
+          <div className="machine-card" key={machine.id}>
+            <div className="machine-header">
+              <h3>{machine.name}</h3>
+              <div className="machine-header-right">
+                <select className="status-select" defaultValue={machine.status}>
+                  <option value="operational">Operational</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="offline">Offline</option>
+                </select>
+              </div>
+            </div>
+            <div className="machine-details">
+              <div><strong>Location:</strong> {machine.location}</div>
+              <div><strong>Last Maintenance:</strong> {new Date(machine.lastMaintenance).toLocaleDateString()}</div>
+              <div><strong>Next Maintenance:</strong> {new Date(machine.nextMaintenance).toLocaleDateString()}</div>
+              <div><strong>Uptime:</strong> {machine.uptime}%</div>
+            </div>
+            <div className="machine-actions">
+              <button className="action-btn primary" onClick={() => openModal('machine', machine)}>
+                View Details
+              </button>
+              <button className="action-btn secondary">
+                Edit Machine
+              </button>
+              <button className="action-btn warning">
+                Schedule Maintenance
+              </button>
             </div>
           </div>
-          
-          <div className="machine-details">
-            <div><strong>Location:</strong> <input type="text" className="location-input" defaultValue="Building A, Floor 1" /></div>
-            <div><strong>Last Maintenance:</strong> <input type="date" className="maintenance-date-input" defaultValue="2024-01-05" /></div>
-            <div><strong>Next Maintenance:</strong> 2024-02-05</div>
-            <div><strong>Uptime:</strong> 96.8%</div>
-            <div><strong>Notes:</strong></div>
-            <textarea 
-              className="maintenance-notes-input" 
-              placeholder="Enter maintenance notes..."
-              defaultValue="Regular maintenance completed. All systems functioning normally."
-            ></textarea>
-          </div>
-          
-          <div className="machine-actions">
-            <button className="action-btn primary" onClick={() => openModal('machine', { name: 'Production Line A' })}>
-              View Details
-            </button>
-            <button className="action-btn secondary">
-              Edit Machine
-            </button>
-            <button className="action-btn warning">
-              Schedule Maintenance
-            </button>
-          </div>
-        </div>
-
-        <div className="machine-card">
-          <div className="machine-header">
-            <h3>Assembly Unit B</h3>
-            <div className="machine-header-right">
-              <select className="status-select">
-                <option value="operational">Operational</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="offline">Offline</option>
-              </select>
-            </div>
-          </div>
-          
-          <div className="machine-details">
-            <div><strong>Location:</strong> <input type="text" className="location-input" defaultValue="Building B, Floor 2" /></div>
-            <div><strong>Last Maintenance:</strong> <input type="date" className="maintenance-date-input" defaultValue="2024-01-08" /></div>
-            <div><strong>Next Maintenance:</strong> 2024-02-08</div>
-            <div><strong>Uptime:</strong> 98.2%</div>
-            <div><strong>Notes:</strong></div>
-            <textarea 
-              className="maintenance-notes-input" 
-              placeholder="Enter maintenance notes..."
-              defaultValue="Performance optimization completed. Efficiency increased by 15%."
-            ></textarea>
-          </div>
-          
-          <div className="machine-actions">
-            <button className="action-btn primary" onClick={() => openModal('machine', { name: 'Assembly Unit B' })}>
-              View Details
-            </button>
-            <button className="action-btn secondary">
-              Edit Machine
-            </button>
-            <button className="action-btn warning">
-              Schedule Maintenance
-            </button>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -655,6 +547,78 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
               </div>
               <div className="user-detail-item">
                 <strong>Tasks Completed:</strong> 156
+              </div>
+            </div>
+          );
+
+        case 'newMachine':
+          return (
+            <div className="new-machine-modal">
+              <h2>Add New Machine</h2>
+              <div className="form-group">
+                <label>Name</label>
+                <input type="text" value={newMachineData.name} onChange={(e) => setNewMachineData({ ...newMachineData, name: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Model</label>
+                <input type="text" value={newMachineData.model} onChange={(e) => setNewMachineData({ ...newMachineData, model: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Serial Number</label>
+                <input type="text" value={newMachineData.serialNumber} onChange={(e) => setNewMachineData({ ...newMachineData, serialNumber: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Location</label>
+                <input type="text" value={newMachineData.location} onChange={(e) => setNewMachineData({ ...newMachineData, location: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Manufacturer</label>
+                <input type="text" value={newMachineData.manufacturer} onChange={(e) => setNewMachineData({ ...newMachineData, manufacturer: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Department</label>
+                <input type="text" value={newMachineData.department} onChange={(e) => setNewMachineData({ ...newMachineData, department: e.target.value })} />
+              </div>
+            </div>
+          );
+
+        case 'newTask':
+          return (
+            <div className="new-task-modal">
+              <h2>Create New Task</h2>
+              <div className="form-group">
+                <label>Title</label>
+                <input type="text" value={newTaskData.title} onChange={(e) => setNewTaskData({ ...newTaskData, title: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea value={newTaskData.description} onChange={(e) => setNewTaskData({ ...newTaskData, description: e.target.value })}></textarea>
+              </div>
+              <div className="form-group">
+                <label>Priority</label>
+                <select value={newTaskData.priority} onChange={(e) => setNewTaskData({ ...newTaskData, priority: e.target.value })}>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Deadline</label>
+                <input type="date" value={newTaskData.deadline} onChange={(e) => setNewTaskData({ ...newTaskData, deadline: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Assign To</label>
+                <select value={newTaskData.assignedTo} onChange={(e) => setNewTaskData({ ...newTaskData, assignedTo: e.target.value })}>
+                  <option value="">Select User</option>
+                  {users.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Machine</label>
+                <select value={newTaskData.machine} onChange={(e) => setNewTaskData({ ...newTaskData, machine: e.target.value })}>
+                  <option value="">Select Machine</option>
+                  {machines.map(machine => <option key={machine.id} value={machine.id}>{machine.name}</option>)}
+                </select>
               </div>
             </div>
           );
@@ -757,7 +721,12 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
               <button className="action-btn secondary" onClick={closeModal}>
                 Cancel
               </button>
-              {modalType !== 'task' && modalType !== 'machine' && modalType !== 'user' && modalType !== 'maintenanceLog' && (
+              {(modalType === 'newTask' || modalType === 'newMachine' || (modalType !== 'task' && modalType !== 'machine' && modalType !== 'user' && modalType !== 'maintenanceLog')) && (
+                <button className="action-btn primary" onClick={modalType === 'newTask' ? handleCreateTask : modalType === 'newMachine' ? handleCreateMachine : () => closeModal()}>
+                  Save
+                </button>
+              )}
+              {modalType !== 'task' && modalType !== 'machine' && modalType !== 'user' && modalType !== 'maintenanceLog' && modalType !== 'newTask' && modalType !== 'newMachine' && (
                 <button className="action-btn primary" onClick={() => closeModal()}>
                   Save
                 </button>

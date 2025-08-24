@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './SubAdminDashboard.css';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import api from '../api'; // Import the api service
 
 const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [activeFilter, setActiveFilter] = useState('week');
@@ -43,61 +42,100 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [tasks, setTasks] = useState([]);
   const [machines, setMachines] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({
+    activeTasks: 0,
+    completionRate: 0,
+    operationalMachines: 0,
+    highPriorityTasks: 0,
+    tasksInProgress: 0,
+    tasksPending: 0,
+    totalMachines: 0,
+  });
+  const [loading, setLoading] = useState({
+    dashboard: false,
+    tasks: false,
+    machines: false,
+    employees: false,
+    action: false,
+  });
+  const [error, setError] = useState({
+    dashboard: null,
+    tasks: null,
+    machines: null,
+    employees: null,
+  });
 
-  // Fetch all data on mount
   useEffect(() => {
-    fetchTasks();
-    fetchMachines();
-    fetchEmployees();
-  }, []);
+    if (activeTab === 'dashboard') {
+      fetchDashboardStats();
+    } else if (activeTab === 'tasks') {
+      fetchTasks();
+      fetchMachines(); // For machine dropdown in task modal
+      fetchEmployees(); // For employee dropdown in task modal
+    } else if (activeTab === 'machines') {
+      fetchMachines();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'dashboard') {
+      fetchDashboardStats();
+    }
+  }, [activeFilter, activeTab]);
+
+  const fetchDashboardStats = async () => {
+    setLoading(prev => ({ ...prev, dashboard: true }));
+    setError(prev => ({ ...prev, dashboard: null }));
+    try {
+      const response = await api.get(`/analytics/stats?period=${activeFilter}`);
+      setDashboardStats(response.data.data);
+    } catch (err) {
+      setError(prev => ({ ...prev, dashboard: 'Failed to fetch dashboard stats.' }));
+      console.error(err);
+    } finally {
+      setLoading(prev => ({ ...prev, dashboard: false }));
+    }
+  };
 
   const fetchTasks = async () => {
+    setLoading(prev => ({ ...prev, tasks: true }));
+    setError(prev => ({ ...prev, tasks: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // Sub Admin sees all tasks (they have admin-like privileges)
-        setTasks(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
+      const response = await api.get('/tasks');
+      setTasks(response.data.data);
+    } catch (err) {
+      setError(prev => ({ ...prev, tasks: 'Failed to fetch tasks.' }));
+      console.error(err);
+    } finally {
+      setLoading(prev => ({ ...prev, tasks: false }));
     }
   };
 
   const fetchMachines = async () => {
+    setLoading(prev => ({ ...prev, machines: true }));
+    setError(prev => ({ ...prev, machines: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMachines(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching machines:', error);
+      const response = await api.get('/machines');
+      setMachines(response.data.data);
+    } catch (err) {
+      setError(prev => ({ ...prev, machines: 'Failed to fetch machines.' }));
+      console.error(err);
+    } finally {
+      setLoading(prev => ({ ...prev, machines: false }));
     }
   };
 
   const fetchEmployees = async () => {
+    setLoading(prev => ({ ...prev, employees: true }));
+    setError(prev => ({ ...prev, employees: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/users/employees`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setEmployees(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching employees:', error);
+      const response = await api.get('/users'); // Fetch all users, can be filtered to employees if needed
+      setEmployees(response.data.data.filter(u => u.role === 'employee' || u.role === 'manager'));
+    } catch (err) {
+      setError(prev => ({ ...prev, employees: 'Failed to fetch employees.' }));
+      console.error(err);
+    } finally {
+      setLoading(prev => ({ ...prev, employees: false }));
     }
   };
 
@@ -203,35 +241,24 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       return;
     }
     
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          title: newTaskData.title,
-          description: newTaskData.description,
-          assignedTo: newTaskData.assignedTo,
-          machine: newTaskData.machine,
-          deadline: newTaskData.deadline,
-          priority: newTaskData.priority
-        })
+      await api.post('/tasks', {
+        title: newTaskData.title,
+        description: newTaskData.description,
+        assignedTo: newTaskData.assignedTo,
+        machine: newTaskData.machine,
+        deadline: newTaskData.deadline,
+        priority: newTaskData.priority
       });
-      if (response.ok) {
-        await fetchTasks();
-        closeModal();
-        alert('Task created successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await fetchTasks();
+      closeModal();
+      alert('Task created successfully!');
     } catch (error) {
       console.error('Error creating task:', error);
-      alert('Error creating task. Please try again.');
+      alert(`Error: ${error.response?.data?.message || 'Please try again.'}`);
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -241,37 +268,26 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       return;
     }
     
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks/${selectedTask.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          title: editTaskData.title,
-          description: editTaskData.description,
-          assignedTo: editTaskData.assignedTo,
-          machine: editTaskData.machine,
-          deadline: editTaskData.deadline,
-          priority: editTaskData.priority,
-          status: editTaskData.status,
-          progress: editTaskData.progress
-        })
+      await api.put(`/tasks/${selectedTask._id}`, {
+        title: editTaskData.title,
+        description: editTaskData.description,
+        assignedTo: editTaskData.assignedTo,
+        machine: editTaskData.machine,
+        deadline: editTaskData.deadline,
+        priority: editTaskData.priority,
+        status: editTaskData.status,
+        progress: editTaskData.progress
       });
-      if (response.ok) {
-        await fetchTasks();
-        closeModal();
-        alert('Task updated successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await fetchTasks();
+      closeModal();
+      alert('Task updated successfully!');
     } catch (error) {
       console.error('Error updating task:', error);
-      alert('Error updating task. Please try again.');
+      alert(`Error: ${error.response?.data?.message || 'Please try again.'}`);
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -280,26 +296,16 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       return;
     }
     
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        await fetchTasks();
-        alert('Task deleted successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await api.delete(`/tasks/${taskId}`);
+      await fetchTasks();
+      alert('Task deleted successfully!');
     } catch (error) {
       console.error('Error deleting task:', error);
-      alert('Error deleting task. Please try again.');
+      alert(`Error: ${error.response?.data?.message || 'Please try again.'}`);
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -309,32 +315,21 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       return;
     }
     
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: newMachineData.name,
-          location: newMachineData.location,
-          status: newMachineData.status
-        })
+      await api.post('/machines', {
+        name: newMachineData.name,
+        location: newMachineData.location,
+        status: newMachineData.status
       });
-      if (response.ok) {
-        await fetchMachines();
-        closeModal();
-        alert('Machine added successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await fetchMachines();
+      closeModal();
+      alert('Machine added successfully!');
     } catch (error) {
       console.error('Error adding machine:', error);
-      alert('Error adding machine. Please try again.');
+      alert(`Error: ${error.response?.data?.message || 'Please try again.'}`);
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -344,35 +339,24 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       return;
     }
     
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines/${selectedMachine.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: editMachineData.name,
-          location: editMachineData.location,
-          status: editMachineData.status,
-          model: editMachineData.model,
-          serialNumber: editMachineData.serialNumber,
-          department: editMachineData.department
-        })
+      await api.put(`/machines/${selectedMachine._id}`, {
+        name: editMachineData.name,
+        location: editMachineData.location,
+        status: editMachineData.status,
+        model: editMachineData.model,
+        serialNumber: editMachineData.serialNumber,
+        department: editMachineData.department
       });
-      if (response.ok) {
-        await fetchMachines();
-        closeModal();
-        alert('Machine updated successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await fetchMachines();
+      closeModal();
+      alert('Machine updated successfully!');
     } catch (error) {
       console.error('Error updating machine:', error);
-      alert('Error updating machine. Please try again.');
+      alert(`Error: ${error.response?.data?.message || 'Please try again.'}`);
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -381,26 +365,16 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       return;
     }
     
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines/${machineId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        await fetchMachines();
-        alert('Machine deleted successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await api.delete(`/machines/${machineId}`);
+      await fetchMachines();
+      alert('Machine deleted successfully!');
     } catch (error) {
       console.error('Error deleting machine:', error);
-      alert('Error deleting machine. Please try again.');
+      alert(`Error: ${error.response?.data?.message || 'Please try again.'}`);
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -434,19 +408,19 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         </div>
       </div>
 
-      {/* Dashboard Widgets */}
+      {loading.dashboard ? <p>Loading dashboard...</p> : error.dashboard ? <p className="error-message">{error.dashboard}</p> : (
       <div className="dashboard-widgets">
         <div className="widget">
           <h3>ACTIVE TASKS</h3>
           <div className="widget-content">
-            <div className="main-number">{tasks.filter(t => t.status !== 'Completed').length}</div>
+            <div className="main-number">{dashboardStats.activeTasks}</div>
             <div className="period">active tasks</div>
             <div className="sub-categories">
               <div className="sub-category">
-                <span>In Progress ({tasks.filter(t => t.status === 'In Progress').length})</span>
+                <span>In Progress ({dashboardStats.tasksInProgress})</span>
               </div>
               <div className="sub-category">
-                <span>Pending ({tasks.filter(t => t.status === 'Pending').length})</span>
+                <span>Pending ({dashboardStats.tasksPending})</span>
               </div>
             </div>
           </div>
@@ -455,16 +429,12 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         <div className="widget">
           <h3>TASK COMPLETION RATE</h3>
           <div className="widget-content">
-            <div className="main-number">
-              {tasks.length > 0 ? Math.round((tasks.filter(t => t.status === 'Completed').length / tasks.length) * 100) : 0}%
-            </div>
+            <div className="main-number">{Math.round(dashboardStats.completionRate)}%</div>
             <div className="period">completion rate</div>
             <div className="progress-bar">
               <div 
                 className="progress-fill" 
-                style={{
-                  width: `${tasks.length > 0 ? (tasks.filter(t => t.status === 'Completed').length / tasks.length) * 100 : 0}%`
-                }}
+                style={{ width: `${dashboardStats.completionRate}%` }}
               ></div>
             </div>
           </div>
@@ -473,11 +443,11 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         <div className="widget">
           <h3>MACHINE UTILIZATION</h3>
           <div className="widget-content">
-            <div className="main-number">{machines.filter(m => m.status === 'Operational').length}</div>
+            <div className="main-number">{dashboardStats.operationalMachines}</div>
             <div className="period">operational machines</div>
             <div className="sub-categories">
               <div className="sub-category">
-                <span>Total ({machines.length})</span>
+                <span>Total ({dashboardStats.totalMachines})</span>
               </div>
             </div>
           </div>
@@ -486,11 +456,12 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         <div className="widget">
           <h3>HIGH PRIORITY TASKS</h3>
           <div className="widget-content">
-            <div className="main-number">{tasks.filter(t => t.priority === 'High').length}</div>
+            <div className="main-number">{dashboardStats.highPriorityTasks}</div>
             <div className="period">high priority tasks</div>
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 
@@ -505,9 +476,10 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         </div>
       </div>
 
+      {loading.tasks ? <p>Loading tasks...</p> : error.tasks ? <p className="error-message">{error.tasks}</p> : (
       <div className="tasks-grid">
         {tasks.map(task => (
-          <div key={task.id} className="task-card">
+          <div key={task._id} className="task-card">
             <div className="task-header">
               <h3>{task.title}</h3>
               <span className={`priority-badge ${task.priority.toLowerCase()}`}>
@@ -533,7 +505,7 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
               <button 
                 className="action-btn small" 
                 onClick={() => openModal('editTask', task)}
-                disabled={loading}
+                disabled={loading.action}
               >
                 Edit
               </button>
@@ -545,8 +517,8 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
               </button>
               <button 
                 className="action-btn small danger" 
-                onClick={() => handleDeleteTask(task.id)}
-                disabled={loading}
+                onClick={() => handleDeleteTask(task._id)}
+                disabled={loading.action}
               >
                 Delete
               </button>
@@ -554,6 +526,7 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 
@@ -568,9 +541,10 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
         </div>
       </div>
 
+      {loading.machines ? <p>Loading machines...</p> : error.machines ? <p className="error-message">{error.machines}</p> : (
       <div className="machines-grid">
         {machines.map(machine => (
-          <div key={machine.id} className="machine-card">
+          <div key={machine._id} className="machine-card">
             <div className="machine-header">
               <h3>{machine.name}</h3>
               <span className={`status-badge ${machine.status.toLowerCase()}`}>
@@ -586,7 +560,7 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
               <button 
                 className="action-btn small" 
                 onClick={() => openModal('editMachine', machine)}
-                disabled={loading}
+                disabled={loading.action}
               >
                 Edit
               </button>
@@ -598,8 +572,8 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
               </button>
               <button 
                 className="action-btn small danger" 
-                onClick={() => handleDeleteMachine(machine.id)}
-                disabled={loading}
+                onClick={() => handleDeleteMachine(machine._id)}
+                disabled={loading.action}
               >
                 Delete
               </button>
@@ -607,6 +581,7 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 
@@ -646,7 +621,7 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                 >
                   <option value="">Select an employee</option>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    <option key={emp._id} value={emp._id}>{emp.name}</option>
                   ))}
                 </select>
                 <label>Machine</label>
@@ -657,7 +632,7 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                 >
                   <option value="">Select a machine (optional)</option>
                   {machines.map(machine => (
-                    <option key={machine.id} value={machine.id}>{machine.name}</option>
+                    <option key={machine._id} value={machine._id}>{machine.name}</option>
                   ))}
                 </select>
                 <label>Deadline</label>
@@ -686,15 +661,15 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                   rows="3"
                 />
                 <div className="modal-actions">
-                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading.action}>
                     Cancel
                   </button>
                   <button 
                     className="action-btn primary" 
                     onClick={handleAddTask}
-                    disabled={loading}
+                    disabled={loading.action}
                   >
-                    {loading ? 'Creating...' : 'Create Task'}
+                    {loading.action ? 'Creating...' : 'Create Task'}
                   </button>
                 </div>
               </div>
@@ -717,7 +692,7 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                 >
                   <option value="">Select an employee</option>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    <option key={emp._id} value={emp._id}>{emp.name}</option>
                   ))}
                 </select>
                 <label>Machine</label>
@@ -728,7 +703,7 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                 >
                   <option value="">Select a machine (optional)</option>
                   {machines.map(machine => (
-                    <option key={machine.id} value={machine.id}>{machine.name}</option>
+                    <option key={machine._id} value={machine._id}>{machine.name}</option>
                   ))}
                 </select>
                 <label>Deadline</label>
@@ -776,15 +751,15 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                   rows="3"
                 />
                 <div className="modal-actions">
-                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading.action}>
                     Cancel
                   </button>
                   <button 
                     className="action-btn primary" 
                     onClick={handleEditTask}
-                    disabled={loading}
+                    disabled={loading.action}
                   >
-                    {loading ? 'Updating...' : 'Update Task'}
+                    {loading.action ? 'Updating...' : 'Update Task'}
                   </button>
                 </div>
               </div>
@@ -858,15 +833,15 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                   <option value="Offline">Offline</option>
                 </select>
                 <div className="modal-actions">
-                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading.action}>
                     Cancel
                   </button>
                   <button 
                     className="action-btn primary" 
                     onClick={handleAddMachine}
-                    disabled={loading}
+                    disabled={loading.action}
                   >
-                    {loading ? 'Adding...' : 'Add Machine'}
+                    {loading.action ? 'Adding...' : 'Add Machine'}
                   </button>
                 </div>
               </div>
@@ -924,15 +899,15 @@ const SubAdminDashboard = ({ onLogout, activeTab, currentUser }) => {
                   placeholder="Enter department" 
                 />
                 <div className="modal-actions">
-                  <button className="action-btn secondary" onClick={closeModal} disabled={loading}>
+                  <button className="action-btn secondary" onClick={closeModal} disabled={loading.action}>
                     Cancel
                   </button>
                   <button 
                     className="action-btn primary" 
                     onClick={handleEditMachine}
-                    disabled={loading}
+                    disabled={loading.action}
                   >
-                    {loading ? 'Updating...' : 'Update Machine'}
+                    {loading.action ? 'Updating...' : 'Update Machine'}
                   </button>
                 </div>
               </div>

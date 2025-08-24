@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../api';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -20,7 +21,6 @@ ChartJS.register(
   Legend
 );
 
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [activeFilter, setActiveFilter] = useState('week');
@@ -57,65 +57,89 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
     status: 'Operational'
   });
   const [selectedMachine, setSelectedMachine] = useState(null);
+  const [stats, setStats] = useState({ tasks: 0, employees: 0, machines: 0, pending: 0 });
   const [maintenanceLogs, setMaintenanceLogs] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [machines, setMachines] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    stats: false,
+    tasks: false,
+    employees: false,
+    machines: false,
+    action: false
+  });
+  const [error, setError] = useState({
+    stats: null,
+    tasks: null,
+    employees: null,
+    machines: null
+  });
 
-  // Fetch all data on mount
+  const fetchStats = useCallback(async () => {
+    setLoading(prev => ({ ...prev, stats: true }));
+    setError(prev => ({ ...prev, stats: null }));
+    try {
+      const response = await api.get(`/analytics/stats?period=${activeFilter}`);
+      setStats(response.data.data);
+    } catch (err) {
+      setError(prev => ({ ...prev, stats: 'Failed to fetch stats.' }));
+    } finally {
+      setLoading(prev => ({ ...prev, stats: false }));
+    }
+  }, [activeFilter]);
+
   useEffect(() => {
-    fetchTasks();
-    fetchEmployees();
-    fetchMachines();
-  }, []);
+    if (activeTab === 'dashboard') {
+      fetchStats();
+    }
+    if (activeTab === 'taskManagement') {
+      fetchTasks();
+    }
+    if (activeTab === 'teamCoordination') {
+      fetchEmployees();
+    }
+    if (activeTab === 'machineManagement') {
+      fetchMachines();
+    }
+  }, [activeTab, activeFilter, fetchStats]);
 
   const fetchTasks = async () => {
+    setLoading(prev => ({ ...prev, tasks: true }));
+    setError(prev => ({ ...prev, tasks: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // Manager sees all tasks (they manage everything)
-        setTasks(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
+      const response = await api.get('/tasks');
+      setTasks(response.data.data);
+    } catch (err) {
+      setError(prev => ({ ...prev, tasks: 'Failed to fetch tasks.' }));
+    } finally {
+      setLoading(prev => ({ ...prev, tasks: false }));
     }
   };
 
   const fetchEmployees = async () => {
+    setLoading(prev => ({ ...prev, employees: true }));
+    setError(prev => ({ ...prev, employees: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/users/employees`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setEmployees(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching employees:', error);
+      const response = await api.get('/users'); // Assuming this fetches all users
+      setEmployees(response.data.data.filter(user => user.role === 'Employee'));
+    } catch (err) {
+      setError(prev => ({ ...prev, employees: 'Failed to fetch employees.' }));
+    } finally {
+      setLoading(prev => ({ ...prev, employees: false }));
     }
   };
 
   const fetchMachines = async () => {
+    setLoading(prev => ({ ...prev, machines: true }));
+    setError(prev => ({ ...prev, machines: null }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMachines(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching machines:', error);
+      const response = await api.get('/machines');
+      setMachines(response.data.data);
+    } catch (err) {
+      setError(prev => ({ ...prev, machines: 'Failed to fetch machines.' }));
+    } finally {
+      setLoading(prev => ({ ...prev, machines: false }));
     }
   };
 
@@ -142,7 +166,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
         });
       }
       if (type === 'maintenanceLog') {
-        fetchMaintenanceLogs(machine.id);
+        fetchMaintenanceLogs(machine._id);
       }
     }
   };
@@ -181,53 +205,31 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
   };
 
   const handleApproveTask = async (taskId) => {
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: 'Completed' })
-      });
-      if (response.ok) {
-        await fetchTasks();
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await api.put(`/tasks/${taskId}`, { status: 'Completed' });
+      fetchTasks();
     } catch (error) {
       alert('Error approving task.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
   const handleReassignTask = async () => {
     if (!selectedTask || !reassignData.newEmployee) return;
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks/${selectedTask.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            assignedTo: reassignData.newEmployee,
-          notes: reassignData.notes
-        })
+      await api.put(`/tasks/${selectedTask._id}`, {
+        assignedTo: reassignData.newEmployee,
+        notes: reassignData.notes
       });
-      if (response.ok) {
-        await fetchTasks();
-        closeModal();
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      fetchTasks();
+      closeModal();
     } catch (error) {
       alert('Error reassigning task.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -241,107 +243,58 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
 
   const handleAssignTask = async () => {
     if (!newTaskData.title || !newTaskData.employee) return;
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/tasks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-      title: newTaskData.title,
-          description: newTaskData.description,
-      assignedTo: newTaskData.employee,
-          machine: newTaskData.machine,
-      deadline: newTaskData.deadline,
-          priority: newTaskData.priority
-        })
+      await api.post('/tasks', {
+        title: newTaskData.title,
+        description: newTaskData.description,
+        assignedTo: newTaskData.employee,
+        machine: newTaskData.machine,
+        deadline: newTaskData.deadline,
+        priority: newTaskData.priority
       });
-      if (response.ok) {
-        await fetchTasks();
-    closeModal();
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      fetchTasks();
+      closeModal();
     } catch (error) {
       alert('Error creating task.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
   const handleUpdateMachine = async () => {
     if (!selectedMachine || !editMachineData.name || !editMachineData.location) return;
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines/${selectedMachine.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: editMachineData.name,
-          location: editMachineData.location,
-          status: editMachineData.status
-        })
-      });
-      if (response.ok) {
-        await fetchMachines();
-        closeModal();
-        alert('Machine updated successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await api.put(`/machines/${selectedMachine._id}`, editMachineData);
+      fetchMachines();
+      closeModal();
+      alert('Machine updated successfully!');
     } catch (error) {
       alert('Error updating machine.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
   const handleAddMaintenanceLog = async () => {
     if (!selectedMachine || !maintenanceLogData.description || !maintenanceLogData.technician) return;
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines/${selectedMachine.id}/maintenance`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: maintenanceLogData.type,
-          description: maintenanceLogData.description,
-          technician: maintenanceLogData.technician,
-          date: maintenanceLogData.date
-        })
-      });
-      if (response.ok) {
-        closeModal();
-        alert('Maintenance log added successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await api.post(`/machines/${selectedMachine._id}/maintenance`, maintenanceLogData);
+      closeModal();
+      alert('Maintenance log added successfully!');
     } catch (error) {
       alert('Error adding maintenance log.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
   const fetchMaintenanceLogs = async (machineId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/machines/${machineId}/maintenance`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMaintenanceLogs(data.data || []);
-      }
+      const response = await api.get(`/machines/${machineId}/maintenance`);
+      setMaintenanceLogs(response.data.data || []);
     } catch (error) {
       console.error('Error fetching maintenance logs:', error);
     }
@@ -349,31 +302,16 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
 
   const handleAddMachine = async () => {
     if (!newMachineData.name || !newMachineData.location) return;
-    setLoading(true);
+    setLoading(prev => ({ ...prev, action: true }));
     try {
-      const response = await fetch(`${API_BASE_URL}/machines`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: newMachineData.name,
-          location: newMachineData.location,
-          status: newMachineData.status
-        })
-      });
-      if (response.ok) {
-        await fetchMachines();
-        closeModal();
-        alert('Machine added successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await api.post('/machines', newMachineData);
+      fetchMachines();
+      closeModal();
+      alert('Machine added successfully!');
     } catch (error) {
       alert('Error adding machine.');
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
@@ -472,56 +410,44 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
           <div className="widget">
             <h3>ASSIGNED TASKS</h3>
             <div className="widget-content">
-              <div className="main-number">{tasks.length}</div>
-              <div className="period">total tasks</div>
-              <div className="sub-categories">
-                <div className="sub-category">
-                  <span>In Progress ({tasks.filter(t => t.status === 'In Progress').length})</span>
-                </div>
-                <div className="sub-category">
-                  <span>Pending Approval ({tasks.filter(t => t.status === 'Pending Approval').length})</span>
-                </div>
-                <div className="sub-category">
-                  <span>Completed ({tasks.filter(t => t.status === 'Completed').length})</span>
-                </div>
-              </div>
+              {loading.stats ? <div className="loading-spinner"></div> : error.stats ? <div className="error-message">{error.stats}</div> : <>
+                <div className="main-number">{stats.tasks}</div>
+                <div className="period">total tasks</div>
+              </>
+              }
             </div>
           </div>
 
           <div className="widget">
             <h3>TEAM MEMBERS</h3>
             <div className="widget-content">
-              <div className="main-number">{employees.length}</div>
-              <div className="period">active employees</div>
-              <div className="sub-categories">
-                <div className="sub-category">
-                  <span>Working ({employees.filter(e => e.currentTask).length})</span>
-                </div>
-                <div className="sub-category">
-                  <span>Available ({employees.filter(e => !e.currentTask).length})</span>
-                </div>
-              </div>
+              {loading.stats ? <div className="loading-spinner"></div> : error.stats ? <div className="error-message">{error.stats}</div> : <>
+                <div className="main-number">{stats.employees}</div>
+                <div className="period">active employees</div>
+              </>
+              }
             </div>
           </div>
 
           <div className="widget">
             <h3>MACHINES</h3>
             <div className="widget-content">
-              <div className="main-number">{machines.filter(m => m.status === 'Operational').length}</div>
-              <div className="period">operational machines</div>
-              <div className="sub-categories">
-                <div className="sub-category">
-                  <span>Total ({machines.length})</span>
-                </div>
-              </div>
+              {loading.stats ? <div className="loading-spinner"></div> : error.stats ? <div className="error-message">{error.stats}</div> : <>
+                <div className="main-number">{stats.machines}</div>
+                <div className="period">operational</div>
+              </>
+              }
             </div>
           </div>
 
           <div className="widget">
             <h3>APPROVAL PENDING</h3>
             <div className="widget-content">
-              <div className="main-number">{tasks.filter(t => t.status === 'Pending Approval').length}</div>
-              <div className="period">tasks need approval</div>
+              {loading.stats ? <div className="loading-spinner"></div> : error.stats ? <div className="error-message">{error.stats}</div> : <>
+                <div className="main-number">{stats.pending}</div>
+                <div className="period">tasks need approval</div>
+              </>
+              }
             </div>
           </div>
         </div>
@@ -546,8 +472,8 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
       </div>
 
       <div className="tasks-grid">
-        {tasks.map(task => (
-          <div key={task.id} className="task-card">
+        {loading.tasks ? <div className="loading-spinner"></div> : error.tasks ? <div className="error-message">{error.tasks}</div> : tasks.map(task => (
+          <div key={task._id} className="task-card">
             <div className="task-header">
               <h3>{task.title}</h3>
               <span className={`priority-badge ${task.priority.toLowerCase()}`}>
@@ -584,7 +510,8 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
               {task.status === 'Pending Approval' && (
                 <button 
                   className="action-btn small success" 
-                  onClick={() => handleApproveTask(task.id)}
+                  onClick={() => handleApproveTask(task._id)}
+                  disabled={loading.action}
                 >
                   Approve
                 </button>
@@ -609,8 +536,8 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
       </div>
 
       <div className="team-grid">
-        {employees.map(employee => (
-          <div key={employee.id} className="employee-card">
+        {loading.employees ? <div className="loading-spinner"></div> : error.employees ? <div className="error-message">{error.employees}</div> : employees.map(employee => (
+          <div key={employee._id} className="employee-card">
             <div className="employee-header">
               <h3>{employee.name}</h3>
               <span className={`status-badge ${employee.status.toLowerCase()}`}>
@@ -663,8 +590,8 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
       </div>
 
       <div className="machines-grid">
-        {machines.map(machine => (
-          <div key={machine.id} className="machine-card">
+        {loading.machines ? <div className="loading-spinner"></div> : error.machines ? <div className="error-message">{error.machines}</div> : machines.map(machine => (
+          <div key={machine._id} className="machine-card">
             <div className="machine-header">
               <h3>{machine.name}</h3>
               <span className={`status-badge ${machine.status.toLowerCase()}`}>
@@ -713,13 +640,13 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 <label>Assign to Employee</label>
                 <select>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.name}>{emp.name}</option>
+                    <option key={emp._id} value={emp._id}>{emp.name}</option>
                   ))}
                 </select>
                 <label>Machine</label>
                 <select>
                   {machines.map(machine => (
-                    <option key={machine.id} value={machine.name}>{machine.name}</option>
+                    <option key={machine._id} value={machine._id}>{machine.name}</option>
                   ))}
                 </select>
                 <label>Deadline</label>
@@ -766,8 +693,8 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 </select>
                 <div className="modal-actions">
                   <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
-                  <button className="action-btn primary" onClick={handleAddMachine} disabled={loading}>
-                    {loading ? 'Adding...' : 'Add Machine'}
+                  <button className="action-btn primary" onClick={handleAddMachine} disabled={loading.action}>
+                    {loading.action ? 'Adding...' : 'Add Machine'}
                   </button>
                 </div>
               </div>
@@ -784,7 +711,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 >
                   <option value="">Select employee</option>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.name}>{emp.name}</option>
+                    <option key={emp._id} value={emp._id}>{emp.name}</option>
                   ))}
                 </select>
                 <label>Notes</label>
@@ -797,7 +724,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 />
                 <div className="modal-actions">
                   <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
-                  <button className="action-btn primary" onClick={handleReassignTask}>Reassign</button>
+                  <button className="action-btn primary" onClick={handleReassignTask} disabled={loading.action}>{loading.action ? 'Reassigning...' : 'Reassign'}</button>
                 </div>
               </div>
             )}
@@ -842,7 +769,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 >
                   <option value="">Select employee</option>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.name}>{emp.name}</option>
+                    <option key={emp._id} value={emp._id}>{emp.name}</option>
                   ))}
                 </select>
                 <label>Machine</label>
@@ -853,7 +780,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 >
                   <option value="">Select machine</option>
                   {machines.map(machine => (
-                    <option key={machine.id} value={machine.name}>{machine.name}</option>
+                    <option key={machine._id} value={machine._id}>{machine.name}</option>
                   ))}
                 </select>
                 <label>Deadline</label>
@@ -883,7 +810,7 @@ const ManagerDashboard = ({ onLogout, activeTab, currentUser }) => {
                 />
                 <div className="modal-actions">
                   <button className="action-btn secondary" onClick={closeModal}>Cancel</button>
-                  <button className="action-btn primary" onClick={handleAssignTask}>Assign Task</button>
+                  <button className="action-btn primary" onClick={handleAssignTask} disabled={loading.action}>{loading.action ? 'Assigning...' : 'Assign Task'}</button>
                 </div>
               </div>
             )}

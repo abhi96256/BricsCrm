@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import lottie from 'lottie-web';
+import api from '../api';
 import './Login.css';
 
 const Login = ({ onLoginSuccess }) => {
@@ -16,6 +17,7 @@ const Login = ({ onLoginSuccess }) => {
     password: ''
   });
   const [loginError, setLoginError] = useState('');
+  const [registerError, setRegisterError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const lottieContainer = useRef(null);
@@ -53,45 +55,75 @@ const Login = ({ onLoginSuccess }) => {
     setLoginError(''); // Clear error when user types
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Navigate to dashboard
-    if (onLoginSuccess) {
-      onLoginSuccess();
+    setRegisterError('');
+
+    if (!formData.fullName || !formData.email || !formData.password) {
+      setRegisterError('Please fill in all required fields.');
+      return;
+    }
+
+    try {
+            const response = await api.post('/auth/register', {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
+
+      if (response.data.success) {
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        console.log('Registration successful:', user);
+        if (onLoginSuccess) {
+          onLoginSuccess(user);
+        }
+      } else {
+        setRegisterError(response.data.message || 'Registration failed. Please try again.');
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'An error occurred. Please try again.';
+      setRegisterError(message);
+      console.error('Registration error:', error);
     }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // Bypass authentication completely - use demo accounts
-    const demoUsers = {
-      'admin@company.com': { id: '1', name: 'Admin User', role: 'Admin', email: 'admin@company.com' },
-      'subadmin@company.com': { id: '2', name: 'Sub Admin User', role: 'Sub Admin', email: 'subadmin@company.com' },
-      'john@company.com': { id: '3', name: 'John Manager', role: 'Manager', email: 'john@company.com' },
-      'sarah@company.com': { id: '4', name: 'Sarah Employee', role: 'Employee', email: 'sarah@company.com' }
-    };
-    
-    const user = demoUsers[loginData.email];
-    
-    if (user && loginData.password === 'admin123') {
-      // Store fake token
-      localStorage.setItem('token', 'fake-token-123');
-      
-      // Login successful
-      console.log('Login successful (bypassed):', user);
-      if (onLoginSuccess) {
-        onLoginSuccess(user);
+    setLoginError('');
+
+    try {
+            const response = await api.post('/auth/login', {
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      if (response.data.success) {
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user)); // Store user info
+        
+        console.log('Login successful:', user);
+        if (onLoginSuccess) {
+          onLoginSuccess(user);
+        }
+      } else {
+        setLoginError(response.data.message || 'Login failed. Please try again.');
       }
-    } else {
-      setLoginError('Invalid credentials. Use demo accounts.');
+    } catch (error) {
+      const message = error.response?.data?.message || 'An error occurred. Please try again.';
+      setLoginError(message);
+      console.error('Login error:', error);
     }
   };
 
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
     setLoginError('');
+    setRegisterError('');
     setFormData({
       fullName: '',
       email: '',
@@ -238,6 +270,11 @@ const Login = ({ onLoginSuccess }) => {
                 />
               </div>
               
+              {registerError && (
+                <div className="error-message">
+                  {registerError}
+                </div>
+              )}
               <button type="submit" className="submit-btn">
                 Submit
               </button>
