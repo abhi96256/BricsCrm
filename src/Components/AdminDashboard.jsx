@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import './AdminDashboard.css';
+import usherImg from '../assets/usher.png';
+import managementImg from '../assets/management.png';
+import delegationImg from '../assets/delegation.png';
+import maintenanceImg from '../assets/maintenance.png';
 
 const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [activeFilter, setActiveFilter] = useState('week');
@@ -124,7 +128,10 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     <div className="dashboard-content">
       <div className="content-header">
         <div className="user-info">
-          <h1>Welcome back, {currentUser?.name || 'Admin'}! 👋</h1>
+          <h1>
+            <img src={managementImg} alt="Dashboard" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
+            Welcome back, {currentUser?.name || 'Admin'}! 👋
+          </h1>
         </div>
         <div className="header-actions">
           <div className="filter-buttons">
@@ -306,7 +313,10 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     <div className="user-management-content">
       <div className="content-header">
         <div className="user-info">
-          <h1>User Management 👥</h1>
+          <h1>
+            <img src={usherImg} alt="User Management" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
+            User Management 👥
+          </h1>
         </div>
         <div className="header-actions">
           <button className="setup-button" onClick={() => openModal('newUser')}>
@@ -355,7 +365,10 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     <div className="task-management-content">
       <div className="content-header">
         <div className="user-info">
-          <h1>Task Management 📋</h1>
+          <h1>
+            <img src={delegationImg} alt="Task Management" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
+            Task Management 📋
+          </h1>
         </div>
         <div className="header-actions">
           <button className="setup-button" onClick={() => openModal('newTask')}>
@@ -418,7 +431,10 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     <div className="machine-management-content">
       <div className="content-header">
         <div className="user-info">
-          <h1>Machine Management ⚙️</h1>
+          <h1>
+            <img src={maintenanceImg} alt="Machine Management" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
+            Machine Management ⚙️
+          </h1>
         </div>
         <div className="header-actions">
           <button className="setup-button" onClick={() => openModal('newMachine')}>
