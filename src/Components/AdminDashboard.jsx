@@ -129,8 +129,8 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       <div className="content-header">
         <div className="user-info">
           <h1>
-            <img src={managementImg} alt="Dashboard" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
-            Welcome back, {currentUser?.name || 'Admin'}! 👋
+            Welcome back, {currentUser?.name || 'Admin'}!
+            <img src={usherImg} alt="Dashboard" style={{ width: '30px', height: '30px', marginLeft: '10px', verticalAlign: 'middle' }} />
           </h1>
         </div>
         <div className="header-actions">
@@ -314,8 +314,8 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       <div className="content-header">
         <div className="user-info">
           <h1>
-            <img src={usherImg} alt="User Management" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
-            User Management 👥
+            User Management
+            <img src={managementImg} alt="User Management" style={{ width: '30px', height: '30px', marginLeft: '10px', verticalAlign: 'middle' }} />
           </h1>
         </div>
         <div className="header-actions">
@@ -366,8 +366,8 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       <div className="content-header">
         <div className="user-info">
           <h1>
-            <img src={delegationImg} alt="Task Management" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
-            Task Management 📋
+            Task Management
+            <img src={delegationImg} alt="Task Management" style={{ width: '30px', height: '30px', marginLeft: '10px', verticalAlign: 'middle' }} />
           </h1>
         </div>
         <div className="header-actions">
@@ -432,8 +432,8 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       <div className="content-header">
         <div className="user-info">
           <h1>
-            <img src={maintenanceImg} alt="Machine Management" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
-            Machine Management ⚙️
+            Machine Management
+            <img src={maintenanceImg} alt="Machine Management" style={{ width: '30px', height: '30px', marginLeft: '10px', verticalAlign: 'middle' }} />
           </h1>
         </div>
         <div className="header-actions">
