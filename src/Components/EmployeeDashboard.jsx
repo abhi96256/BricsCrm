@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api'; // Import the centralized API service
 import './EmployeeDashboard.css';
+import usherImg from '../assets/usher.png';
+import managementImg from '../assets/management.png';
+import delegationImg from '../assets/delegation.png';
+import maintenanceImg from '../assets/maintenance.png';
 
 const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [activeFilter, setActiveFilter] = useState('week');
@@ -221,7 +225,10 @@ const EmployeeDashboard = ({ onLogout, activeTab, currentUser }) => {
     <div className="dashboard-content">
       <div className="content-header">
         <div className="user-info">
-          <h1>{currentUser?.name || 'Employee'}</h1>
+          <h1>
+            <img src={managementImg} alt="Dashboard" style={{ width: '30px', height: '30px', marginRight: '10px', verticalAlign: 'middle' }} />
+            {currentUser?.name || 'Employee'}
+          </h1>
           <p className="role-indicator">Employee Dashboard</p>
         </div>
         
