@@ -324,10 +324,10 @@ const Login = ({ onLoginSuccess }) => {
           }}>
             <h4 style={{ color: '#e94560', margin: '0 0 0.5rem 0' }}>Demo Accounts:</h4>
             <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-              <p><strong>Admin:</strong> admin@company.com / admin123</p>
-              <p><strong>Sub Admin:</strong> subadmin@company.com / admin123</p>
-              <p><strong>Manager:</strong> john@company.com / admin123</p>
-              <p><strong>Employee:</strong> sarah@company.com / admin123</p>
+              <p><strong>Admin:</strong> qqq@gmail.com / 123456</p>
+              <p><strong>Sub Admin:</strong> subadmin@gmail.com / 123456</p>
+              <p><strong>Manager:</strong> john@gmail.com / 123456</p>
+              <p><strong>Employee:</strong> sarah@gmail.com / 123456</p>
             </div>
           </div>
 
