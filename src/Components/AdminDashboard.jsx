@@ -23,6 +23,7 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
   const [machines, setMachines] = useState([]);
   const [newTaskData, setNewTaskData] = useState({ title: '', description: '', priority: 'medium', deadline: '', assignedTo: '', machine: '' });
   const [newMachineData, setNewMachineData] = useState({ name: '', model: '', serialNumber: '', location: '', manufacturer: '', department: '' });
+  const [newUserData, setNewUserData] = useState({ name: '', email: '', password: '', role: '', department: '', phone: '', address: '', status: 'active' });
 
 
     useEffect(() => {
@@ -100,6 +101,10 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
     setSelectedMachine(null);
     setSelectedUser(null);
     setError('');
+    // Reset form data
+    setNewTaskData({ title: '', description: '', priority: 'medium', deadline: '', assignedTo: '', machine: '' });
+    setNewMachineData({ name: '', model: '', serialNumber: '', location: '', manufacturer: '', department: '' });
+    setNewUserData({ name: '', email: '', password: '', role: '', department: '', phone: '', address: '', status: 'Active' });
   };
 
   const handleCreateTask = async () => {
@@ -120,6 +125,23 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
       closeModal();
     } catch (err) {
       setError('Failed to create machine.');
+      console.error(err);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    // Basic validation
+    if (!newUserData.name || !newUserData.email || !newUserData.password || !newUserData.role) {
+      setError('Please fill in all required fields (Name, Email, Password, and Role).');
+      return;
+    }
+
+    try {
+      const response = await api.post('/users', newUserData);
+      setUsers([...users, response.data.data]);
+      closeModal();
+    } catch (err) {
+      setError('Failed to create user.');
       console.error(err);
     }
   };
@@ -598,6 +620,95 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
             </div>
           );
 
+        case 'newUser':
+          return (
+            <div className="new-user-modal">
+              <h2>Add New User</h2>
+              <div className="form-group">
+                <label>Name *</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter full name" 
+                  value={newUserData.name}
+                  onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Email *</label>
+                <input 
+                  type="email" 
+                  placeholder="Enter email address" 
+                  value={newUserData.email}
+                  onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Password *</label>
+                <input 
+                  type="password" 
+                  placeholder="Enter password" 
+                  value={newUserData.password}
+                  onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Role *</label>
+                <select 
+                  value={newUserData.role}
+                  onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value })}
+                  required
+                >
+                  <option value="">Select Role</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Sub Admin">Sub Admin</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Employee">Employee</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Department</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter department" 
+                  value={newUserData.department}
+                  onChange={(e) => setNewUserData({ ...newUserData, department: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Phone</label>
+                <input 
+                  type="tel" 
+                  placeholder="Enter phone number" 
+                  value={newUserData.phone}
+                  onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Address</label>
+                <textarea 
+                  placeholder="Enter address" 
+                  value={newUserData.address}
+                  onChange={(e) => setNewUserData({ ...newUserData, address: e.target.value })}
+                  rows="3"
+                ></textarea>
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select 
+                  value={newUserData.status}
+                  onChange={(e) => setNewUserData({ ...newUserData, status: e.target.value })}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Suspended">Suspended</option>
+                </select>
+              </div>
+            </div>
+          );
+
         case 'newTask':
           return (
             <div className="new-task-modal">
@@ -737,12 +848,12 @@ const AdminDashboard = ({ onLogout, activeTab, currentUser }) => {
               <button className="action-btn secondary" onClick={closeModal}>
                 Cancel
               </button>
-              {(modalType === 'newTask' || modalType === 'newMachine' || (modalType !== 'task' && modalType !== 'machine' && modalType !== 'user' && modalType !== 'maintenanceLog')) && (
-                <button className="action-btn primary" onClick={modalType === 'newTask' ? handleCreateTask : modalType === 'newMachine' ? handleCreateMachine : () => closeModal()}>
+              {(modalType === 'newTask' || modalType === 'newMachine' || modalType === 'newUser' || (modalType !== 'task' && modalType !== 'machine' && modalType !== 'user' && modalType !== 'maintenanceLog')) && (
+                <button className="action-btn primary" onClick={modalType === 'newTask' ? handleCreateTask : modalType === 'newMachine' ? handleCreateMachine : modalType === 'newUser' ? handleCreateUser : () => closeModal()}>
                   Save
                 </button>
               )}
-              {modalType !== 'task' && modalType !== 'machine' && modalType !== 'user' && modalType !== 'maintenanceLog' && modalType !== 'newTask' && modalType !== 'newMachine' && (
+              {modalType !== 'task' && modalType !== 'machine' && modalType !== 'user' && modalType !== 'maintenanceLog' && modalType !== 'newTask' && modalType !== 'newMachine' && modalType !== 'newUser' && (
                 <button className="action-btn primary" onClick={() => closeModal()}>
                   Save
                 </button>
